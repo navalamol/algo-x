@@ -28,7 +28,8 @@ import {
   Search as SearchIcon,
   GridView,
   NotificationsActive,
-  MenuBook as MenuBookIcon
+  MenuBook as MenuBookIcon,
+  Science as ScienceIcon
 } from '@mui/icons-material';
 
 import Dashboard from './components/Dashboard/Dashboard';
@@ -41,6 +42,7 @@ import StockScanner from './components/StockScanner/StockScanner';
 import SectorHeatmap from './components/Heatmap/SectorHeatmap';
 import AlertManager from './components/AlertManager/AlertManager';
 import TradeJournal from './components/TradeJournal/TradeJournal';
+import Backtest from './components/Backtest/Backtest';
 import socketService from './services/socket.service';
 import apiService from './services/api.service';
 
@@ -132,6 +134,7 @@ function App() {
     { text: 'Heatmap', icon: <GridView />, path: '/heatmap' },
     { text: 'Alerts', icon: <NotificationsActive />, path: '/alerts' },
     { text: 'Trade Journal', icon: <MenuBookIcon />, path: '/journal' },
+    { text: 'Backtest', icon: <ScienceIcon />, path: '/backtest' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
@@ -236,6 +239,7 @@ function App() {
                 <Route path="/heatmap" element={<SectorHeatmap />} />
                 <Route path="/alerts" element={<AlertManager />} />
                 <Route path="/journal" element={<TradeJournal />} />
+                <Route path="/backtest" element={<Backtest />} />
               </Routes>
             </Container>
           </Box>

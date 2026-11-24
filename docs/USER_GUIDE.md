@@ -329,3 +329,45 @@ The **VIX chip** in the top navigation bar shows India VIX (volatility index) in
 | Telegram alerts not arriving | Bot not configured | Go to Settings → Telegram, enter token + chat ID |
 | Trade history empty | `trades.json` cleared | Pre-loaded demo data is in `profiles/amol/trades.json` |
 | Prices not updating | WebSocket disconnected in live mode | Demo mode uses polling; check `.kite_token` for live mode |
+
+---
+
+## 11. Backtesting
+
+**Route:** `/backtest`
+
+### What it does
+Simulates a strategy against historical price data bar-by-bar to measure performance before risking real capital. Each bar checks the strategy's entry conditions, then manages the open position with a stop-loss and take-profit until exit.
+
+### How to use
+1. Navigate to **Backtest** in the sidebar.
+2. Select a **Strategy** from the dropdown (all 10 built-in strategies are available).
+3. Choose a **Symbol** (10 Nifty stocks pre-loaded) and **Days** (60–730).
+4. Set **Capital** (starting ₹), **Slippage %** (cost of market impact), and **Brokerage ₹** (per trade flat fee).
+5. Click **Run** — results appear in ~1 second.
+
+### What you get
+- **6 metric cards**: Total Trades, Win Rate, Net P&L, Profit Factor, Max Drawdown %, Sharpe (approx)
+- **Equity curve**: Portfolio value over time with entry capital reference line
+- **Monthly P&L bar chart**: green/red bars per calendar month
+- **Trade log**: every simulated trade with entry/exit date, price, qty, reason (TAKE_PROFIT / STOP_LOSS / END), and RSI at entry
+
+### Demo mode
+In demo mode, **synthetic OHLCV data is generated automatically** — no Kite API key needed. The price series uses realistic random-walk with ~2.5% daily volatility. Results will vary between runs (data is generated fresh each time), which is useful for understanding how a strategy behaves under different market conditions.
+
+### Config options
+| Field | Default | Notes |
+|-------|---------|-------|
+| Strategy | — | Any built-in or custom strategy's conditions + SL/TP are used |
+| Symbol | RELIANCE | Symbol is decorative in demo mode (synthetic data only) |
+| Days | 180 | Number of calendar days of history to simulate |
+| Capital | ₹1,00,000 | Starting portfolio value |
+| Slippage | 0.1% | Added to entry price, subtracted from exit proceeds |
+| Brokerage | ₹20 | Flat fee per trade (both sides) |
+
+### Interpreting results
+- **Profit Factor > 1.5** — strategy has an edge
+- **Max Drawdown < 15%** — acceptable risk
+- **Win Rate > 50%** — but check avg win vs avg loss too
+- **Sharpe > 1** — good risk-adjusted return
+

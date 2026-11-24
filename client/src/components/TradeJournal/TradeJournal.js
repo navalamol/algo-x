@@ -231,7 +231,7 @@ export default function TradeJournal() {
       if (dateTo && new Date(t.createdAt) > new Date(dateTo + 'T23:59:59')) return false;
       return true;
     }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [trades, filterStatus, filterStrategy, filterSymbol, dateFrom, dateTo]);
+  }, [tabTrades, filterStatus, filterStrategy, filterSymbol, dateFrom, dateTo]);
 
   const exportCSV = () => {
     const headers = ['Date','Symbol','Exchange','Strategy','Type','Qty','Entry','Exit','Status','P&L','P&L%','Paper'];

@@ -20,6 +20,7 @@ const scannerRoutes = require('./routes/scanner.routes');
 const heatmapRoutes = require('./routes/heatmap.routes');
 const alertRoutes = require('./routes/alert.routes');
 const demoRoutes = require('./routes/demo.routes');
+const backtestRoutes = require('./routes/backtest.routes');
 
 // Import services
 const TickerService = require('./services/ticker.service');
@@ -131,6 +132,7 @@ app.use('/api/scanner', scannerRoutes);
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/demo', demoRoutes);
+app.use('/api/backtest', backtestRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
