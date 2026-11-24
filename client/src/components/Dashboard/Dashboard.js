@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Grid,
   Paper,
@@ -20,6 +20,10 @@ import {
   AccountBalance,
   ShowChart
 } from '@mui/icons-material';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip as ReTooltip, ResponsiveContainer, Cell, ReferenceLine
+} from 'recharts';
 import apiService from '../../services/api.service';
 import socketService from '../../services/socket.service';
 
@@ -35,6 +39,7 @@ function Dashboard() {
   const [activeStrategies, setActiveStrategies] = useState([]);
   const [signals, setSignals] = useState([]);
   const [orderHistory, setOrderHistory] = useState([]);
+  const [journalTrades, setJournalTrades] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -56,12 +61,13 @@ function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [statsRes, positionsRes, tradesRes, strategiesRes, orderHistoryRes] = await Promise.all([
+      const [statsRes, positionsRes, tradesRes, strategiesRes, orderHistoryRes, journalRes] = await Promise.all([
         apiService.getTradeStats(),
         apiService.getPositions().catch(() => ({ data: { data: { net: [] } } })),
         apiService.getTrades(),
         apiService.getStrategies(),
-        apiService.getOrderHistory()
+        apiService.getOrderHistory(),
+        apiService.getJournalTrades('amol').catch(() => ({ data: { trades: [] } }))
       ]);
 
       setOrderHistory(orderHistoryRes.data.data);
@@ -69,10 +75,25 @@ function Dashboard() {
       setPositions(positionsRes.data.data?.net || []);
       setRecentTrades(tradesRes.data.data.slice(0, 10));
       setActiveStrategies(strategiesRes.data.data.filter(s => s.isActive));
+      setJournalTrades(journalRes.data?.trades || journalRes.data?.data || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }
   };
+
+  // ── Daily P&L (last 14 days from journal trades) ──────────────────────────
+  const dailyPnL = useMemo(() => {
+    const map = {};
+    journalTrades
+      .filter(t => t.status === 'COMPLETE' && t.pnl !== undefined)
+      .forEach(t => {
+        const day = new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        map[day] = (map[day] || 0) + (t.pnl || 0);
+      });
+    return Object.entries(map)
+      .map(([date, pnl]) => ({ date, pnl: Math.round(pnl * 100) / 100 }))
+      .slice(-14);
+  }, [journalTrades]);
 
   const StatCard = ({ title, value, icon, color, subtitle }) => (
     <Card sx={{ height: '100%' }}>
@@ -142,6 +163,30 @@ function Dashboard() {
           />
         </Grid>
       </Grid>
+
+      {/* ── Daily P&L Bar Chart ── */}
+      {dailyPnL.length > 0 && (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>Daily P&L</Typography>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={dailyPnL} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#888' }} />
+              <YAxis tickFormatter={v => `₹${v}`} tick={{ fontSize: 11, fill: '#888' }} />
+              <ReTooltip
+                contentStyle={{ background: '#1e1e1e', border: '1px solid #333', borderRadius: 6 }}
+                formatter={v => [`₹${v}`, 'P&L']}
+              />
+              <ReferenceLine y={0} stroke="#555" />
+              <Bar dataKey="pnl" radius={[3, 3, 0, 0]}>
+                {dailyPnL.map((d, i) => (
+                  <Cell key={i} fill={d.pnl >= 0 ? '#4caf50' : '#f44336'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Paper>
+      )}
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>

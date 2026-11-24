@@ -73,15 +73,22 @@ const setAccessToken = (accessToken) => {
 
 
 
-// Check if demo mode is enabled
-const isDemoModeDb = () => {
-  return kiteConfig.demoModeDb;
+// Runtime override — null means "use env vars", true/false overrides both flags
+let runtimeDemoOverride = null;
+
+const isDemoModeDb = () => runtimeDemoOverride !== null ? runtimeDemoOverride : kiteConfig.demoModeDb;
+const isDemoMode    = () => runtimeDemoOverride !== null ? runtimeDemoOverride : kiteConfig.demoMode;
+
+/**
+ * Flip demo mode at runtime (called by the AppBar toggle).
+ * Also updates kiteConfig so getKiteInstance() returns null in demo mode.
+ */
+const setDemoModeOverride = (enabled) => {
+  runtimeDemoOverride = enabled;
+  logger.info(`🔄 Demo mode ${enabled ? 'ENABLED' : 'DISABLED'} via runtime toggle`);
 };
 
-// Check if demo mode is enabled
-const isDemoMode = () => {
-  return kiteConfig.demoMode;
-};
+const getDemoModeOverride = () => runtimeDemoOverride;
 
 module.exports = {
   kiteConfig,
@@ -89,5 +96,7 @@ module.exports = {
   setAccessToken,
   validateConfig,
   isDemoMode,
-  isDemoModeDb
+  isDemoModeDb,
+  setDemoModeOverride,
+  getDemoModeOverride
 };

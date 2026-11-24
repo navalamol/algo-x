@@ -249,7 +249,44 @@ VIX: 15.2 (Low Volatility)
 
 ---
 
-## 10. VIX Indicator (AppBar)
+## 10. Trade Journal (`/journal`)
+
+**What it shows:** A complete view of your paper trading history with performance analytics, an equity curve, and filterable trade records.
+
+**How to use:**
+1. Navigate to `/journal` via the sidebar (**Trade Journal** item)
+2. The page loads all trades from `profiles/amol/trades.json` automatically
+3. Summary cards at the top show: Total Trades, Completed, Win Rate, Net P&L, Open Positions
+
+**Equity Curve:**
+- Shows cumulative P&L across all completed trades sorted by date
+- Green area = profitable run, red area = drawdown
+- Hover a data point to see the instrument name, date, and P&L for that trade
+
+**Strategy Performance Table:**
+- Groups completed trades by strategy name
+- Shows trade count, win rate chip (green ≥ 60%, amber 40–60%, red < 40%), net P&L, and avg P&L per trade
+
+**Filtering Trades:**
+| Filter | Options |
+|--------|---------|
+| Status | All / Wins / Losses / Open |
+| Strategy | dropdown of all strategy names in the journal |
+| Symbol | dropdown of all instruments traded |
+| Date range | From / To date pickers |
+
+**Trade table columns:** Date, Symbol, Exchange, Strategy, Type (BUY/SELL), Qty, Entry Price, Exit Price, Status chip, P&L, P&L%
+
+**Testing in demo mode:**
+- 25 paper trades are pre-loaded on every server start (23 complete, 2 open)
+- Net P&L ≈ +₹1,799 | Win rate ≈ 65% | Date range: Nov 2–24 2026
+- Try each filter combination: filter by "RSI Oversold Reversal", set date to Nov 10–20, then toggle to "Wins only"
+
+**Config needed:** None — data comes from `profiles/amol/trades.json` which is seeded automatically.
+
+---
+
+## 11. VIX Indicator (AppBar)
 
 The **VIX chip** in the top navigation bar shows India VIX (volatility index) in real-time.
 

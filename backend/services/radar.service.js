@@ -9,14 +9,16 @@ class RadarService {
     this.isRunning = false;
     this.scanInterval = null;
     this.config = {
-      imbalanceThreshold: 0.30,  // 30% net buyer imbalance to appear on radar
+      imbalanceThreshold: 0.30,
       scanIntervalMs: 2000,
       maxEntries: 20
     };
     this.radarStocks = [];
     this.watchSymbols = [];
-    this.demoMode = isDemoMode();
   }
+
+  // Re-read on every call so the runtime toggle takes effect immediately
+  get demoMode() { return isDemoMode(); }
 
   start() {
     if (this.isRunning) return;
@@ -50,6 +52,11 @@ class RadarService {
   }
 
   async scan() {
+    // Lazy-init watchSymbols when demo mode is enabled via runtime toggle after start()
+    if (this.watchSymbols.length === 0 && this.demoMode) {
+      const instruments = mockService.getAllInstruments();
+      this.watchSymbols = instruments.map(i => `${i.exchange}:${i.tradingsymbol}`);
+    }
     if (this.watchSymbols.length === 0) return;
 
     try {

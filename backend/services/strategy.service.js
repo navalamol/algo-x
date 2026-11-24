@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 const Strategy = require('../models/Strategy.model');
 const Stock = require('../models/Stock.model');
 const orderService = require('./order.service');
-const { isDemoModeDb, isDemoMode } = require('../config/kite.config');
+const { isDemoModeDb, isDemoMode } = require('../config/kite.config'); // isDemoMode guards evaluateStrategy
 const memoryStore = require('./memory-store.service');
 const vixService = require('./vix.service');
 const { applyVIXAdjustment } = require('../config/trading.config');
@@ -109,12 +109,13 @@ class StrategyService {
    */
   async evaluateStrategy(strategy) {
     try {
-      // Get instruments for this strategy
+      // In demo mode there is no live ticker feed or MongoDB Stock collection
+      if (isDemoMode()) return;
+
+      // Guard: strategies seeded in memory may not have an instruments field
+      if (!strategy.instruments || strategy.instruments.length === 0) return;
+
       const instrumentTokens = strategy.instruments.map(i => i.instrumentToken);
-      
-      if (instrumentTokens.length === 0) {
-        return;
-      }
 
       // Get stock data
       const stocks = await Stock.find({

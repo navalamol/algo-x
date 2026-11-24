@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Box, Paper, Typography, Grid, Card, CardContent, Chip,
+  Box, Paper, Typography, Grid, Card, CardContent, Chip, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   FormControl, InputLabel, Select, MenuItem, TextField,
-  ToggleButton, ToggleButtonGroup, Divider, Tooltip
+  ToggleButton, ToggleButtonGroup, Divider, Tooltip,
+  Tab, Tabs
 } from '@mui/material';
 import {
-  TrendingUp, TrendingDown, ShowChart, CheckCircle, RadioButtonUnchecked
+  TrendingUp, TrendingDown, ShowChart, CheckCircle, RadioButtonUnchecked, Download
 } from '@mui/icons-material';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
@@ -174,6 +175,7 @@ function StrategyTable({ trades }) {
 export default function TradeJournal() {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tradeTab, setTradeTab] = useState('paper'); // 'paper' | 'live' | 'all'
 
   // Filters
   const [filterStatus, setFilterStatus] = useState('ALL');     // ALL | WIN | LOSS | OPEN
@@ -192,27 +194,34 @@ export default function TradeJournal() {
       .finally(() => setLoading(false));
   }, []);
 
+  // ── Tab filter ─────────────────────────────────────────────────────────────
+  const tabTrades = useMemo(() => {
+    if (tradeTab === 'paper') return trades.filter(t => t.isPaperTrade !== false);
+    if (tradeTab === 'live')  return trades.filter(t => t.isPaperTrade === false);
+    return trades;
+  }, [trades, tradeTab]);
+
   // ── Computed stats ─────────────────────────────────────────────────────────
   const { completed, open, wins, netPnL, avgPnL } = useMemo(() => {
-    const c = trades.filter(t => t.status === 'COMPLETE');
-    const o = trades.filter(t => t.status === 'OPEN');
+    const c = tabTrades.filter(t => t.status === 'COMPLETE');
+    const o = tabTrades.filter(t => t.status === 'OPEN');
     const w = c.filter(t => (t.pnl || 0) > 0);
     const net = c.reduce((s, t) => s + (t.pnl || 0), 0);
     return { completed: c, open: o, wins: w, netPnL: net, avgPnL: c.length ? net / c.length : 0 };
-  }, [trades]);
+  }, [tabTrades]);
 
   // ── Strategy list for filter dropdown ─────────────────────────────────────
   const strategies = useMemo(() => {
-    return [...new Set(trades.map(t => t.strategyName).filter(Boolean))].sort();
-  }, [trades]);
+    return [...new Set(tabTrades.map(t => t.strategyName).filter(Boolean))].sort();
+  }, [tabTrades]);
 
   const symbols = useMemo(() => {
-    return [...new Set(trades.map(t => t.tradingSymbol).filter(Boolean))].sort();
-  }, [trades]);
+    return [...new Set(tabTrades.map(t => t.tradingSymbol).filter(Boolean))].sort();
+  }, [tabTrades]);
 
   // ── Filtered trades ────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
-    return trades.filter(t => {
+    return tabTrades.filter(t => {
       if (filterStatus === 'WIN' && (t.pnl || 0) <= 0) return false;
       if (filterStatus === 'LOSS' && (t.pnl || 0) >= 0) return false;
       if (filterStatus === 'OPEN' && t.status !== 'OPEN') return false;
@@ -224,6 +233,24 @@ export default function TradeJournal() {
     }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [trades, filterStatus, filterStrategy, filterSymbol, dateFrom, dateTo]);
 
+  const exportCSV = () => {
+    const headers = ['Date','Symbol','Exchange','Strategy','Type','Qty','Entry','Exit','Status','P&L','P&L%','Paper'];
+    const rows = filtered.map(t => [
+      new Date(t.createdAt).toLocaleDateString('en-IN'),
+      t.tradingSymbol, t.exchange, t.strategyName || '',
+      t.transactionType, t.quantity,
+      t.entryPrice ?? '', t.exitPrice ?? '',
+      t.status, t.pnl ?? '', t.pnlPercentage ?? '',
+      t.isPaperTrade ? 'Yes' : 'No'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `trades_${tradeTab}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return <Box p={3}><Typography>Loading journal…</Typography></Box>;
   }
@@ -231,16 +258,23 @@ export default function TradeJournal() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Trade Journal</Typography>
-      <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-        Paper trading history for profile <strong>amol</strong> — {trades.length} total trades
-      </Typography>
+      {/* ── Paper / Live / All tabs ── */}
+      <Tabs
+        value={tradeTab}
+        onChange={(_, v) => { setTradeTab(v); setFilterStrategy(''); setFilterSymbol(''); }}
+        sx={{ mb: 2 }}
+      >
+        <Tab value="paper" label={`Paper Trades (${trades.filter(t => t.isPaperTrade !== false).length})`} />
+        <Tab value="live"  label={`Live Trades (${trades.filter(t => t.isPaperTrade === false).length})`} />
+        <Tab value="all"   label={`All (${trades.length})`} />
+      </Tabs>
 
       {/* ── Stat cards ── */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={4} md={2.4}>
           <StatCard
             title="Total Trades"
-            value={trades.length}
+            value={tabTrades.length}
             icon={<ShowChart fontSize="large" />}
             color="primary.main"
           />
@@ -284,17 +318,22 @@ export default function TradeJournal() {
       {/* ── Equity curve + strategy table ── */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} md={7}>
-          <EquityCurve trades={trades} />
+          <EquityCurve trades={tabTrades} />
         </Grid>
         <Grid item xs={12} md={5}>
-          <StrategyTable trades={trades} />
+          <StrategyTable trades={tabTrades} />
         </Grid>
       </Grid>
 
       {/* ── Trades table with filters ── */}
       <Paper sx={{ p: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1} mb={2}>
-          <Typography variant="h6">All Trades</Typography>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6">All Trades</Typography>
+            <Button size="small" variant="outlined" startIcon={<Download />} onClick={exportCSV}>
+              CSV
+            </Button>
+          </Box>
           <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
             <ToggleButtonGroup
               value={filterStatus}
@@ -340,7 +379,7 @@ export default function TradeJournal() {
         </Box>
 
         <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>
-          Showing {filtered.length} of {trades.length} trades
+          Showing {filtered.length} of {tabTrades.length} trades
         </Typography>
 
         <TableContainer>

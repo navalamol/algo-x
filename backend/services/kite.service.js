@@ -1,4 +1,4 @@
-const { getKiteInstance, isDemoMode } = require('../config/kite.config');
+const { getKiteInstance, isDemoMode, isDemoModeDb } = require('../config/kite.config');
 const mockService = require('./mock.service');
 const logger = require('../utils/logger');
 const { RateLimiter } = require('../utils/helpers');
@@ -9,12 +9,10 @@ class KiteService {
     this.rateLimiter = new RateLimiter(10, 1000); // 10 requests per second
     this.instruments = null;
     this.instrumentsMap = new Map();
-    this.demoMode = isDemoMode();
-    
-    if (this.demoMode) {
-      logger.info('📊 Kite Service initialized in DEMO MODE');
-    }
   }
+
+  // Re-evaluated on every call so the runtime toggle takes effect immediately
+  get demoMode() { return isDemoMode(); }
 
   /**
    * Get all instruments

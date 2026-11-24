@@ -27,7 +27,8 @@ import {
   Radar as RadarIcon,
   Search as SearchIcon,
   GridView,
-  NotificationsActive
+  NotificationsActive,
+  MenuBook as MenuBookIcon
 } from '@mui/icons-material';
 
 import Dashboard from './components/Dashboard/Dashboard';
@@ -39,7 +40,9 @@ import RadarDashboard from './components/RadarDashboard/RadarDashboard';
 import StockScanner from './components/StockScanner/StockScanner';
 import SectorHeatmap from './components/Heatmap/SectorHeatmap';
 import AlertManager from './components/AlertManager/AlertManager';
+import TradeJournal from './components/TradeJournal/TradeJournal';
 import socketService from './services/socket.service';
+import apiService from './services/api.service';
 
 const drawerWidth = 240;
 
@@ -64,23 +67,60 @@ const theme = createTheme({
 function App() {
   const [tickerStatus, setTickerStatus] = useState('disconnected');
   const [vixData, setVixData] = useState(null); // { vix, condition }
+  const [demoMode, setDemoMode] = useState(() => {
+    // Optimistic local state from localStorage while we confirm with server
+    return localStorage.getItem('demoMode') === 'true';
+  });
 
   useEffect(() => {
-    // Connect to socket
     socketService.connect();
-
     socketService.on('ticker:connected', () => setTickerStatus('connected'));
     socketService.on('ticker:disconnected', () => setTickerStatus('disconnected'));
     socketService.on('ticker:error', () => setTickerStatus('error'));
     socketService.on('vix_update', (data) => setVixData(data));
 
-    // Load initial VIX on mount
     fetch('/api/market/vix').then(r => r.json()).then(d => {
       if (d.vix) setVixData({ vix: d.vix, condition: d.condition });
     }).catch(() => {});
 
+    // Sync demo mode state from server on mount
+    apiService.getDemoMode()
+      .then(res => {
+        const serverEnabled = res.data.enabled;
+        setDemoMode(serverEnabled);
+        localStorage.setItem('demoMode', serverEnabled);
+      })
+      .catch(() => {});
+
+    // Browser notifications for scanner matches
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+    socketService.on('scanner:new_match', (match) => {
+      if (Notification.permission === 'granted') {
+        new Notification(`📡 Scanner: ${match.symbol}`, {
+          body: `${match.templateName} — RSI ${match.rsi?.toFixed(1) ?? '—'} | Vol ${match.volumeVsAvg?.toFixed(1) ?? '—'}×`,
+          icon: '/favicon.ico',
+          tag: `scanner-${match.symbol}`,
+        });
+      }
+    });
+
     return () => { socketService.disconnect(); };
   }, []);
+
+  const toggleDemoMode = async () => {
+    const next = !demoMode;
+    try {
+      await apiService.setDemoMode(next);
+      setDemoMode(next);
+      localStorage.setItem('demoMode', next);
+      // Reload the page so all components re-fetch with the new mode
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to toggle demo mode:', err);
+    }
+  };
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
@@ -91,6 +131,7 @@ function App() {
     { text: 'Scanner', icon: <SearchIcon />, path: '/scanner' },
     { text: 'Heatmap', icon: <GridView />, path: '/heatmap' },
     { text: 'Alerts', icon: <NotificationsActive />, path: '/alerts' },
+    { text: 'Trade Journal', icon: <MenuBookIcon />, path: '/journal' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
@@ -105,6 +146,22 @@ function App() {
                 Kite Algo Trading Platform
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Tooltip title={demoMode ? 'Demo mode ON — using mock data. Click to switch to live.' : 'Live mode — click to enable mock/demo data.'}>
+                  <Chip
+                    label={demoMode ? '⚡ DEMO' : 'LIVE'}
+                    size="small"
+                    onClick={toggleDemoMode}
+                    sx={{
+                      cursor: 'pointer',
+                      bgcolor: demoMode ? 'warning.dark' : 'transparent',
+                      border: demoMode ? 'none' : '1px solid rgba(255,255,255,0.3)',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '0.72rem',
+                      '&:hover': { opacity: 0.85 }
+                    }}
+                  />
+                </Tooltip>
                 {vixData && (
                   <Tooltip title={`India VIX — ${vixData.condition || 'NORMAL'}`}>
                     <Chip
@@ -178,6 +235,7 @@ function App() {
                 <Route path="/scanner" element={<StockScanner />} />
                 <Route path="/heatmap" element={<SectorHeatmap />} />
                 <Route path="/alerts" element={<AlertManager />} />
+                <Route path="/journal" element={<TradeJournal />} />
               </Routes>
             </Container>
           </Box>

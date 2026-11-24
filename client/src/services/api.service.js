@@ -113,6 +113,10 @@ const apiService = {
     return axios.get(`${API_BASE_URL}/profiles/${profileName}/trades`);
   },
 
+  // Demo mode toggle
+  getDemoMode: () => axios.get(`${API_BASE_URL}/demo/mode`),
+  setDemoMode: (enabled) => axios.post(`${API_BASE_URL}/demo/mode`, { enabled }),
+
   // Generic HTTP helpers for new feature components
   get: (path, params = {}) => axios.get(`${API_BASE_URL}${path}`, { params }),
   post: (path, data = {}) => axios.post(`${API_BASE_URL}${path}`, data),

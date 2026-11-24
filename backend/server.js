@@ -19,6 +19,7 @@ const radarRoutes = require('./routes/radar.routes');
 const scannerRoutes = require('./routes/scanner.routes');
 const heatmapRoutes = require('./routes/heatmap.routes');
 const alertRoutes = require('./routes/alert.routes');
+const demoRoutes = require('./routes/demo.routes');
 
 // Import services
 const TickerService = require('./services/ticker.service');
@@ -96,9 +97,9 @@ const initializeAuth = async () => {
 // Initialize auth after a short delay to ensure server is ready
 setTimeout(initializeAuth, 1000);
 
-// Seed demo data into MemoryStore before services start
-const { isDemoModeDb } = require('./config/kite.config');
-if (isDemoModeDb()) {
+// Seed demo data into MemoryStore before services start (runs when either demo flag is set)
+const { isDemoModeDb, isDemoMode } = require('./config/kite.config');
+if (isDemoModeDb() || isDemoMode()) {
   const seedDemo = require('./services/demo-seed.service');
   seedDemo();
 }
@@ -109,7 +110,8 @@ const strategyService = new StrategyService(io);
 const radarService = new RadarService(io);
 const scannerService = new ScannerService(io);
 const alertService = new AlertService(io);
-vixService.io = io; // wire socket after io is ready
+vixService.io = io;
+heatmapService.io = io;
 
 // Make services available to routes
 app.locals.tickerService = tickerService;
@@ -128,6 +130,7 @@ app.use('/api/radar', radarRoutes);
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/demo', demoRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
