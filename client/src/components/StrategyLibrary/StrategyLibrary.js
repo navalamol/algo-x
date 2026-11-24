@@ -35,7 +35,7 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const getRiskColor = (risk) => {
+const getRiskColor = (risk = '') => {
   switch (risk.toLowerCase()) {
     case 'low':
       return 'success';
@@ -177,7 +177,7 @@ const StrategyLibrary = ({ profileName, onStrategyAdopted }) => {
                           Win Rate
                         </Typography>
                         <Typography variant="h6" color="success.main" fontWeight="bold">
-                          {strategy.backtest.winRate}%
+                          {strategy.backtest && strategy.backtest.winRate}%
                         </Typography>
                       </Box>
                     </Grid>
@@ -187,7 +187,7 @@ const StrategyLibrary = ({ profileName, onStrategyAdopted }) => {
                           Avg Return
                         </Typography>
                         <Typography variant="h6" color="primary.main" fontWeight="bold">
-                          {strategy.backtest.avgReturn > 0 ? '+' : ''}{strategy.backtest.avgReturn}%
+                          {strategy.backtest && strategy.backtest.avgReturn > 0 ? '+' : ''}{strategy.backtest.avgReturn}%
                         </Typography>
                       </Box>
                     </Grid>
@@ -197,7 +197,7 @@ const StrategyLibrary = ({ profileName, onStrategyAdopted }) => {
                           Max Drawdown
                         </Typography>
                         <Typography variant="body2" color="error.main">
-                          {strategy.backtest.maxDrawdown}%
+                          {strategy.backtest && strategy.backtest.maxDrawdown}%
                         </Typography>
                       </Box>
                     </Grid>
@@ -207,7 +207,7 @@ const StrategyLibrary = ({ profileName, onStrategyAdopted }) => {
                           Total Trades
                         </Typography>
                         <Typography variant="body2">
-                          {strategy.backtest.totalTrades}
+                          {strategy.backtest && strategy.backtest.totalTrades}
                         </Typography>
                       </Box>
                     </Grid>

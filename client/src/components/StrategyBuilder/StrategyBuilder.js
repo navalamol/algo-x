@@ -235,7 +235,7 @@ function StrategyBuilder() {
                       </Typography>
                     </TableCell>
                     <TableCell>{strategy.type}</TableCell>
-                    <TableCell>{strategy.instruments.length}</TableCell>
+                    <TableCell>{strategy.instruments && strategy.instruments.length}</TableCell>
                     <TableCell>
                       <Chip
                         label={strategy.isActive ? 'Active' : 'Inactive'}

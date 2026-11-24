@@ -70,7 +70,7 @@ const Settings = () => {
             <StrategyLibrary 
               profileName={selectedProfile}
               onStrategyAdopted={(strategy) => {
-                console.log('Strategy adopted:', strategy);
+                // console.log('Strategy adopted:', strategy);
               }}
             />
           </TabPanel>

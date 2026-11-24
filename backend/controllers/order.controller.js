@@ -122,7 +122,7 @@ exports.getOrderDetails = async (req, res) => {
 exports.getPositions = async (req, res) => {
   try {
     const positions = await kiteService.getPositions();
-    console.log('Positions:', positions);
+    // console.log('Positions:', positions);
     
     res.json({
       success: true,
@@ -178,7 +178,7 @@ exports.getTrades = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate('strategyId');
 
-        console.log('Trades:', trades);
+        // console.log('Trades:', trades);
     }
     
     res.json({
