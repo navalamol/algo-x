@@ -437,6 +437,83 @@ class MockService {
    * Each symbol has a scenario bias (direction + volatility) so backtest results
    * are consistent across runs — no random drift.
    */
+  getPortfolioIntelligence() {
+    // 5 demo holdings covering all 4 health states
+    const holdings = [
+      {
+        symbol: 'INFY',      sector: 'IT',      qty: 10, entryPrice: 1420.00,
+        currentPrice: 1583.40, pnlAbs: 1634.00,  pnlPct: 11.51, currentValue: 15834.00,
+        health: 'HOLD',
+        healthReason: 'RSI 65.3 — momentum zone — no action needed',
+        signals:   ['RSI 65.3 — momentum zone', 'Uptrend intact (above SMA20 & SMA50)', 'MACD bullish', 'In profit +11.5%'],
+        riskFlags: [],
+        marketState: { rsiZone: 'momentum', trendBias: 'uptrend', macdBias: 'bullish', volumeBand: 'elevated', vwapPosition: 'above' },
+      },
+      {
+        symbol: 'SBIN',      sector: 'Banking', qty: 15, entryPrice: 635.00,
+        currentPrice: 601.80, pnlAbs: -498.00, pnlPct: -5.23, currentValue: 9027.00,
+        health: 'URGENT',
+        healthReason: 'Downtrend — price below SMA20 & SMA50',
+        signals:   [],
+        riskFlags: ['RSI 26.4 — oversold', 'Downtrend — price below SMA20 & SMA50', 'MACD bearish', 'Significant loss -5.2%'],
+        marketState: { rsiZone: 'oversold', trendBias: 'downtrend', macdBias: 'bearish', volumeBand: 'normal', vwapPosition: 'below' },
+      },
+      {
+        symbol: 'RELIANCE',  sector: 'Energy',  qty: 5, entryPrice: 2390.00,
+        currentPrice: 2498.20, pnlAbs: 541.00,  pnlPct: 4.53,  currentValue: 12491.00,
+        health: 'HOLD',
+        healthReason: 'RSI 55.8 — building — no action needed',
+        signals:   ['RSI 55.8 — building', 'Above SMA20', 'MACD bullish', 'In profit +4.5%'],
+        riskFlags: [],
+        marketState: { rsiZone: 'building', trendBias: 'above_sma20', macdBias: 'bullish', volumeBand: 'normal', vwapPosition: 'above' },
+      },
+      {
+        symbol: 'TCS',       sector: 'IT',      qty: 2, entryPrice: 3752.00,
+        currentPrice: 3780.30, pnlAbs: 56.60,   pnlPct: 0.75,  currentValue: 7560.60,
+        health: 'REVIEW',
+        healthReason: 'Mixed signals — review before adding to position',
+        signals:   ['RSI 42.1 — building'],
+        riskFlags: ['Below SMA20', 'MACD bearish'],
+        marketState: { rsiZone: 'building', trendBias: 'below_sma20', macdBias: 'bearish', volumeBand: 'normal', vwapPosition: 'below' },
+      },
+      {
+        symbol: 'ICICIBANK', sector: 'Banking', qty: 8, entryPrice: 1001.00,
+        currentPrice: 1091.50, pnlAbs: 724.00,  pnlPct: 9.04,  currentValue: 8732.00,
+        health: 'WATCH',
+        healthReason: 'RSI 76.1 — overbought (potential exit)',
+        signals:   ['Uptrend intact (above SMA20 & SMA50)', 'MACD bullish', 'In profit +9.0%'],
+        riskFlags: ['RSI 76.1 — overbought (potential exit)'],
+        marketState: { rsiZone: 'overbought', trendBias: 'uptrend', macdBias: 'bullish', volumeBand: 'elevated', vwapPosition: 'above' },
+      },
+    ];
+
+    const totalValue = holdings.reduce((s, h) => s + h.currentValue, 0);
+    const totalPnL   = holdings.reduce((s, h) => s + h.pnlAbs, 0);
+
+    return {
+      holdings,
+      sectors: [
+        { sector: 'IT',      holdingCount: 2, allocation: 43.4, allocRisk: 'HIGH',   symbols: ['INFY', 'TCS'] },
+        { sector: 'Banking', holdingCount: 2, allocation: 33.1, allocRisk: 'MEDIUM', symbols: ['ICICIBANK', 'SBIN'] },
+        { sector: 'Energy',  holdingCount: 1, allocation: 23.5, allocRisk: 'LOW',    symbols: ['RELIANCE'] },
+      ],
+      correlations: [
+        { symbolA: 'INFY',     symbolB: 'TCS',       r: 0.86, risk: 'HIGH',     note: 'Highly correlated — same sector (IT)' },
+        { symbolA: 'SBIN',     symbolB: 'ICICIBANK', r: 0.74, risk: 'HIGH',     note: 'Highly correlated — same sector (Banking)' },
+        { symbolA: 'INFY',     symbolB: 'RELIANCE',  r: 0.42, risk: 'MODERATE', note: 'Moderately correlated — cross-sector' },
+      ],
+      summary: {
+        URGENT: 1, WATCH: 1, REVIEW: 1, HOLD: 2,
+        totalHoldings: 5,
+        portfolioValue: Math.round(totalValue),
+        totalPnL:    Math.round(totalPnL),
+        totalPnLPct: Math.round((totalPnL / (totalValue - totalPnL)) * 10000) / 100,
+        topRisk: 'SBIN: Downtrend — price below SMA20 & SMA50 with -5.2% loss',
+        dataSource: 'demo',
+      },
+    };
+  }
+
   getHistoricalOHLCV(symbol, days) {
     const scenarios = {
       SBIN:      { startPrice: 625.50,  drift: -0.0025, vol: 0.008,  volumeBase: 350000 },

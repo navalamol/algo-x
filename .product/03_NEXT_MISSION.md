@@ -168,17 +168,26 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 6 — Portfolio Intelligence
+## 🔧 Mission 6 — Portfolio Intelligence — IMPLEMENTED (not yet personally validated)
 
-**Objective:** Algo-X becomes useful even when the user doesn't want to place a trade.
+**What was built:**
+- `portfolio-intelligence.service.js` — reuses `computeMarketState()` (market-state.js) and `EvidenceService.getEvidence()` to score each open holding; Pearson r correlation between holding pairs; sector concentration from SECTOR_MAP
+- `GET /api/portfolio/intelligence?profile=amol` → holdings with health (URGENT/WATCH/REVIEW/HOLD), sectors with allocation %, correlations with r value
+- `mockService.getPortfolioIntelligence()` — 5 pre-canned holdings covering all 4 health states (INFY HOLD, SBIN URGENT, RELIANCE HOLD, TCS REVIEW, ICICIBANK WATCH)
+- Frontend `PortfolioIntelligence.js` — summary strip (4 health counts + portfolio value + P&L), expandable holdings table sorted URGENT-first, sector concentration progress bars, correlation pair table
+- Added to nav under Intelligence section at `/portfolio`
+- USER_GUIDE section 15 added
 
-**What to build:**
-- Portfolio health summary: HOLD / REVIEW / WATCH / URGENT per holding
-- Sector concentration risk
-- Correlations between holdings
-- Changes in portfolio context (opportunity score, risk)
+**Validation status: IMPLEMENTED** — not yet personally validated end-to-end.
 
-**Effort:** ~3 days
+**To validate:**
+- [ ] Start app in demo mode (`npm run dev:all`)
+- [ ] Navigate to Intelligence → Portfolio (`/portfolio`)
+- [ ] Summary strip shows 1 URGENT, 1 WATCH, 1 REVIEW, 2 HOLD
+- [ ] SBIN row is at top (URGENT badge, red border), INFY shows HOLD (green)
+- [ ] Click SBIN row to expand — riskFlags show downtrend + oversold RSI
+- [ ] Sector Concentration: IT 43% HIGH, Banking 33% MEDIUM, Energy 23% LOW
+- [ ] Correlations: INFY↔TCS r=0.86 HIGH, SBIN↔ICICIBANK r=0.74 HIGH
 
 ---
 

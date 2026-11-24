@@ -96,7 +96,7 @@ Old Dashboard moved from `/` to `/dashboard`. Items with `soon: true` render as 
 | Mission 3 | Evidence Layer — Why This Stock evidence cards with signals, indicators, key levels | 🔧 Implemented |
 | Mission 4 | What Changed — categorical state-transition detection, WhatChangedCard | 🔧 Implemented |
 | Mission 5 | Real Historical Backtesting — Kite data, IS/OOS split, overfitting warning | 🔧 Implemented |
-| Mission 6 | Portfolio Intelligence — holding health, sector concentration, correlations | Planned |
+| Mission 6 | Portfolio Intelligence — holding health, sector concentration, correlations | 🔧 Implemented |
 | Mission 7 | Strategy/Paper Trading integration with intelligence layer | Planned |
 
 ## ⚠️ Integrity Warning — Backtesting & Win Rates

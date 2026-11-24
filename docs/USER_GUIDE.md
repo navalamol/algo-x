@@ -772,3 +772,55 @@ Response:
 | `HISTORICAL_KITE` | Real NSE candles from Kite Connect |
 | `SYNTHETIC_DEMO` | Deterministic synthetic candles (demo mode) |
 | `SYNTHETIC_FALLBACK` | Synthetic candles used because Kite failed |
+
+---
+
+## 15. Portfolio Intelligence (Mission 6)
+
+### What it does
+
+Answers "how healthy is my current portfolio?" without opening 5 tools. For each open paper trade, it assigns a health rating, explains why, and surfaces sector concentration and correlation risks.
+
+### Health ratings
+
+| Rating | Meaning | When assigned |
+|--------|---------|---------------|
+| URGENT | Immediate review needed | Downtrend + oversold, or loss > 8% |
+| WATCH  | Potential risk forming | RSI overbought, downtrend, or loss > 3% |
+| REVIEW | Mixed signals | Below SMA20 + MACD bearish, or small loss |
+| HOLD   | Setup intact | Uptrend or above SMA20, RSI healthy, in profit |
+
+### Sector concentration risk
+
+| Level | Trigger | Meaning |
+|-------|---------|---------|
+| HIGH | Single sector ≥ 40% of portfolio | Concentrated exposure |
+| MEDIUM | 25–40% | Worth monitoring |
+| LOW | < 25% | Well diversified |
+
+### Correlation panel
+
+Shows pairs of holdings with Pearson correlation |r| > 0.4. HIGH (|r| > 0.7) means the two holdings move almost in lockstep — a sector event hits both simultaneously.
+
+### How to test in demo mode
+
+1. `npm run dev:all`
+2. Navigate to `/portfolio` (Intelligence → Portfolio in the sidebar)
+3. Demo shows 5 holdings covering all 4 health states: INFY (HOLD), SBIN (URGENT), RELIANCE (HOLD), TCS (REVIEW), ICICIBANK (WATCH)
+4. Click any holding row to expand signals + risk flags + raw market state
+5. Sector Concentration shows IT at 43% (HIGH), Banking 33% (MEDIUM), Energy 23% (LOW)
+6. Correlations panel shows INFY↔TCS (0.86 HIGH) and SBIN↔ICICIBANK (0.74 HIGH)
+
+### REST endpoint
+
+```
+GET /api/portfolio/intelligence?profile=amol
+Response: {
+  holdings: [{ symbol, sector, qty, entryPrice, currentPrice, pnlAbs, pnlPct,
+               health, healthReason, signals, riskFlags, marketState }],
+  sectors:  [{ sector, holdingCount, allocation, allocRisk, symbols }],
+  correlations: [{ symbolA, symbolB, r, risk, note }],
+  summary:  { URGENT, WATCH, REVIEW, HOLD, totalHoldings, portfolioValue,
+              totalPnL, totalPnLPct, topRisk, dataSource }
+}
+```

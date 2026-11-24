@@ -33,7 +33,8 @@ import {
   Science as ScienceIcon,
   Home as HomeIcon,
   LightbulbOutlined,
-  ChangeHistory
+  ChangeHistory,
+  AccountBalance as PortfolioIcon
 } from '@mui/icons-material';
 import { ListSubheader } from '@mui/material';
 
@@ -50,6 +51,7 @@ import AlertManager from './components/AlertManager/AlertManager';
 import TradeJournal from './components/TradeJournal/TradeJournal';
 import Backtest from './components/Backtest/Backtest';
 import OpportunityRanking from './components/Opportunities/OpportunityRanking';
+import PortfolioIntelligence from './components/Portfolio/PortfolioIntelligence';
 import socketService from './services/socket.service';
 import apiService from './services/api.service';
 
@@ -140,8 +142,9 @@ function App() {
     {
       header: 'Intelligence',
       items: [
-        { text: 'Opportunities', icon: <LightbulbOutlined />, path: '/opportunities' },
-        { text: 'What Changed', icon: <ChangeHistory />, path: '/', soon: true },
+        { text: 'Opportunities',  icon: <LightbulbOutlined />, path: '/opportunities' },
+        { text: 'Portfolio',      icon: <PortfolioIcon />,     path: '/portfolio' },
+        { text: 'What Changed',   icon: <ChangeHistory />,     path: '/', soon: true },
       ]
     },
     {
@@ -296,6 +299,7 @@ function App() {
                 <Route path="/journal" element={<TradeJournal />} />
                 <Route path="/backtest" element={<Backtest />} />
                 <Route path="/opportunities" element={<OpportunityRanking />} />
+                <Route path="/portfolio" element={<PortfolioIntelligence />} />
               </Routes>
             </Container>
           </Box>
