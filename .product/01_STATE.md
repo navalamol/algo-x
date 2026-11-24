@@ -102,13 +102,38 @@ The app uses Kite Connect OAuth. The access token is saved to `.kite_token` afte
 
 ---
 
+### Trade Journal (`/journal`, added Nov 2026)
+
+Paper / Live / All tabs. Stat cards (total, win rate, net P&L, open positions). Equity curve (Recharts AreaChart). Strategy performance breakdown table. Filterable trades table (status, strategy, symbol, date range). CSV export. All seeded with 25 demo paper trades.
+
+### Backtesting Engine (`/backtest`, added Nov 2026)
+
+Bar-by-bar simulator on historical or synthetic OHLCV data. Computes RSI, SMA20/50, MACD, Bollinger Bands, VWAP per bar. Checks strategy entry conditions; executes stop-loss / take-profit. Returns 6 metrics (win rate, profit factor, max drawdown, Sharpe approx), equity curve, monthly P&L bars, and full trade log. Runs entirely on synthetic data in demo mode — no Kite API key needed.
+
+### Demo Infrastructure (overhauled Nov 2026)
+
+- Runtime demo toggle chip in AppBar — switches mock/live without editing `.env` or restarting
+- `kite.config.js`: `runtimeDemoOverride` + `setDemoModeOverride()` — services re-check on every call via getter pattern
+- MongoDB skipped in demo mode (fast-fail, no crash)
+- `demo.controller.js` + `GET/POST /api/demo/mode`
+- `demo-seed.service.js` — seeds MemoryStore with 25 trades + 5 strategies from `profiles/amol/trades.json`
+
+### Browser Notifications (added Nov 2026)
+
+`Notification API` for `scanner:new_match` socket events — permission requested on first load, fires native OS notification with RSI + volume data.
+
+### Dashboard Daily P&L Chart (added Nov 2026)
+
+Recharts `BarChart` above signals table showing last 14 days of journal P&L with green/red bars per day.
+
+---
+
 ## Known Limitations / Not Working
 
-- **No backtesting** — strategies can't be tested on historical data
-- **Trade journal has no frontend** — `journal.json` exists in profiles but no UI to read/write it
+- **Backtesting uses synthetic data in demo mode** — real historical candles require a live Kite API key
 - **No group features** — leaderboard, shared watchlists not implemented
-- **Heatmap data freshness** — HeatmapService is mocked/estimated when real sector data isn't available
-- **MockService data is static** — demo mode shows fixed instruments, not real NSE universe
+- **MockService data is static** — demo mode shows 7 fixed instruments, not real NSE universe
+- **ATR implemented but unused** — `calculateATR()` exists but stop-loss is still fixed %
 
 ## Fixed (Nov 2026)
 

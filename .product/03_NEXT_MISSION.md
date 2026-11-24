@@ -1,78 +1,76 @@
 # Next Mission
 
-*Updated after strategic review Nov 2026. Scan Watchdog is DONE.*
+*Updated Nov 2026 — after Trade Journal UI, Demo Infrastructure, and Backtesting Engine are DONE.*
 
-## Just Completed: Scan Watchdog + VIX Fix
+## Just Completed (this session)
 
-**What's now live:**
-- Background watch mode: `ScannerService.startWatching(templateId)` polls every 2 minutes
-- New match detection: diffs current matches vs previous cycle, fires only on new entrants
-- Rich Telegram alert: RSI, volume×avg, VWAP status, Radar score, VIX condition, sector
-- Morning brief cron: 9:00 AM IST Mon–Fri, all templates summarized, sent to Telegram
-- UI: Watch toggle on each template card, new match feed, Snackbar notifications
-- VIX fixed: Kite Connect API primary source, NSE fallback, demo mode randomized
+**Demo Infrastructure overhaul:**
+- Runtime demo toggle chip in AppBar — no `.env` edits needed
+- KiteService & RadarService: `demoMode` converted to getter (live re-checks `isDemoMode()` on every call)
+- `db.config.js`: skip MongoDB in demo mode, 5s connection timeout, no `process.exit(1)`
+- `kite.config.js`: `runtimeDemoOverride` + `setDemoModeOverride()` / `getDemoModeOverride()`
+- `demo.controller.js` + `demo.routes.js`: GET/POST `/api/demo/mode`
+- Heatmap: fixed `SECTORS` import, added `_buildDemoData()` with 50+ stock demo prices
+- Radar: lazy `watchSymbols` init from MockService in demo mode
+- Strategy service: guard against undefined `instruments` array
+
+**Trade Journal UI** (`/journal`):
+- Paper / Live / All tabs (Live correctly shows 0 paper trades)
+- Stat cards, equity curve (AreaChart), strategy performance table
+- Filterable trades table (status, strategy, symbol, date range)
+- CSV export button
+
+**Dashboard P&L chart:** Daily P&L bar chart from journal trades (last 14 days)
+
+**Browser notifications:** `Notification API` for `scanner:new_match` socket events
+
+**Strategy Library fix:** Express route ordering bug — static `/library/strategies` moved before `/:name`
+
+**Backtesting Engine** (`/backtest`):
+- `backtest.service.js`: bar-by-bar simulator — RSI, SMA20/50, MACD, BB, VWAP computed per bar; stop-loss/take-profit execution; equity curve, drawdown, Sharpe approximation
+- `backtest.controller.js`: loads strategy from default library; generates synthetic OHLCV in demo mode; uses Kite historical data when API key is live
+- `Backtest.js` frontend: strategy/symbol/days/capital config, equity curve, monthly P&L bars, 6 metric cards, trade log accordion
 
 ---
 
-## Mission 2: Trade Journal UI (Priority: High)
+## Mission 4: Strategy Performance Analytics (Priority: Medium)
 
-**Why:** Every paper trade is logged to `profiles/{name}/trades.json` but there's no UI to review them. Without a journal UI, learning from trades is impossible.
+**Trigger:** 50+ paper trades logged — we now have 25 seeded. Run the platform for a week in demo mode to accumulate real signal data.
 
 **What to build:**
-- Trade history table: entry/exit price, P&L, duration, strategy/template used
-- Filter by date range, strategy, outcome (win/loss)
-- P&L chart over time (equity curve)
-- Per-trade notes field (Y/N reply from Telegram + optional reason)
-
-**Files:**
-- Create `client/src/components/TradeJournal/TradeJournal.js`
-- Add `/api/journal/:profileName` route reading `profiles/{name}/trades.json`
-- Wire into sidebar nav
+- Win rate by strategy, by time-of-day, by VIX band (LOW/NORMAL/HIGH/EXTREME)
+- Average P&L per setup
+- Best/worst performing conditions
+- Heat map: day-of-week × hour showing which slots generate alpha
+- Backend: `backend/services/analytics.service.js` aggregating `profiles/{name}/trades.json`
+- Frontend: new Analytics page with Recharts charts
 
 **Effort:** ~2 days
 
 ---
 
-## Mission 3: Backtesting Engine (Priority: Medium)
+## Mission 5: Backtest Improvements (Priority: Medium)
 
-**Why:** Before risking real money, you need to know if a strategy actually worked on historical data.
+The basic engine is live. Next iteration:
 
-**Prerequisites:**
-- Historical OHLCV data download from Kite (`kiteService.getHistoricalData()`)
-- Data storage format decision (JSON files per instrument vs SQLite)
+1. **Real historical data** — when Kite API key is live, `backtest.controller.js` already attempts `kite.getHistoricalData()` but the instrument lookup needs testing on real NSE data
+2. **Strategy comparison** — run multiple strategies on same symbol/period side-by-side
+3. **Walk-forward testing** — split data into in-sample (train) and out-of-sample (test) windows
+4. **Parameter optimization** — sweep RSI period, SL%, TP% over grid and report best combo
 
-**What to build:**
-- Download script: fetch N days of daily/minute candles for watchlist instruments
-- Backtest runner: replay price history through scan conditions, simulate entries/exits
-- Results: total return, win rate, max drawdown, Sharpe ratio
-- Compare templates head-to-head
-
-**Effort:** ~1 week
+**Effort:** ~3 days for items 1–2; ~1 week for 3–4
 
 ---
 
-## Mission 4: Strategy Performance Dashboard (Priority: Medium, needs data)
+## Mission 6: ATR-based Dynamic Stop-Loss (Priority: Low, Quick Win)
 
-**Trigger:** Build this after 50+ paper trades exist
-
-**What to build:**
-- Win rate by template, by time-of-day, by VIX band
-- Average P&L per setup
-- Best/worst performing conditions
-- Heat map: day × hour showing which slots generate alpha
+`calculateATR()` is implemented in `indicators.service.js` but unused in live trading. Wire it into `paper-trading.service.js` so stop-loss = `entry_price - (ATR_multiplier × ATR)` instead of fixed %.
 
 **Files:**
-- Backend aggregation in `backend/services/analytics.service.js`
-- Dashboard component with Recharts
+- `backend/services/paper-trading.service.js` — read ATR from `memoryStore`, compute dynamic SL
+- `backend/config/trading.config.js` — add `atrMultiplier` default (1.5)
 
----
-
-## Indicators Waiting to Be Used
-
-These are correctly implemented but no scan template references them:
-- `StochasticRSI` — add "StochRSI oversold" scan template
-- `MACD histogram` — add "MACD bullish cross" scan template
-- `ATR` — use for dynamic stop-loss sizing in paper trading
+**Effort:** ~2 hours
 
 ---
 
@@ -80,4 +78,4 @@ These are correctly implemented but no scan template references them:
 
 - Real money execution
 - Group leaderboard
-- Chartink webhook bridge (nice to have, not on critical path)
+- Chartink webhook bridge

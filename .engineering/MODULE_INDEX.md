@@ -27,6 +27,8 @@
 | `backend/controllers/scanner.controller.js` | Run scan by template, run custom scan, get templates |
 | `backend/controllers/heatmap.controller.js` | Current heatmap state |
 | `backend/controllers/alert.controller.js` | Create/list/delete alerts, trigger test |
+| `backend/controllers/demo.controller.js` | GET/POST `/api/demo/mode` — runtime demo toggle |
+| `backend/controllers/backtest.controller.js` | POST `/api/backtest/run` — run backtest; GET `/api/backtest/strategies` — list strategies |
 
 ### Services (business logic)
 
@@ -48,6 +50,8 @@
 | `backend/services/alert.service.js` | Stores alert definitions; evaluates conditions on each tick; triggers notifications; tracks trigger history |
 | `backend/services/auth.service.js` | Exchanges Kite request_token for access_token; saves/loads token from `.kite_token` file; validates token |
 | `backend/services/memory-store.service.js` | In-memory ring buffer for price/volume/indicator history per symbol; used by strategy and scanner services |
+| `backend/services/backtest.service.js` | Bar-by-bar backtest simulator: `generateOHLCV()`, `runBacktest()`, `computeMetrics()` |
+| `backend/services/demo-seed.service.js` | Seeds MemoryStore with 25 trades + 5 strategies from `profiles/amol/trades.json` on demo startup |
 
 ### Models (MongoDB Schemas)
 
@@ -71,6 +75,8 @@
 | `backend/routes/scanner.routes.js` | `/api/scanner` |
 | `backend/routes/heatmap.routes.js` | `/api/heatmap` |
 | `backend/routes/alert.routes.js` | `/api/alerts` |
+| `backend/routes/demo.routes.js` | `/api/demo` |
+| `backend/routes/backtest.routes.js` | `/api/backtest` |
 
 ### Utils
 
@@ -100,6 +106,8 @@
 | `components/PaperTradingDashboard/PaperTradingDashboard.js` | Virtual portfolio: capital, positions, completed trades, P&L |
 | `components/StrategyLibrary/StrategyLibrary.js` | Browse 10 pre-built strategies, one-click adopt to profile |
 | `components/TelegramSettings/TelegramSettings.js` | Configure bot token, chat ID, notification preferences, test |
+| `components/TradeJournal/TradeJournal.js` | Paper/Live/All tabs; stat cards; equity curve; strategy table; filterable trade log; CSV export |
+| `components/Backtest/Backtest.js` | Backtest config (strategy, symbol, days, capital); equity curve; monthly P&L bars; 6 metric cards; trade log accordion |
 
 ## Profile Data (`profiles/`)
 
