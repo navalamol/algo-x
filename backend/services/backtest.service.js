@@ -203,4 +203,28 @@ function splitCandles(candles, outOfSamplePct = 20) {
   };
 }
 
-module.exports = { runBacktest, generateOHLCV, computeMetrics, splitCandles };
+/**
+ * Run a backtest on the OOS window with IS tail context for indicator warmup.
+ * Prepends the last WARMUP bars from inSample so indicators compute correctly,
+ * then strips those warmup bars from the returned trades and equity.
+ */
+function runBacktestOOS({ inSampleCandles, outOfSampleCandles, strategy, capital, slippage, brokerage }) {
+  const WARMUP = 50;
+  const tail = inSampleCandles.slice(-WARMUP);
+  const combined = [...tail, ...outOfSampleCandles];
+  const oosStartDate = outOfSampleCandles[0]?.date;
+
+  const { trades: allTrades, equity: allEquity } = runBacktest({
+    candles: combined, strategy, capital, slippage, brokerage,
+  });
+
+  // Keep only trades that entered during the actual OOS window
+  const trades = allTrades.filter(t => t.entryDate >= oosStartDate);
+  // The equity array has 1 initial entry (candles[0]) then one entry per bar from i=50.
+  // Since tail fills bars 0–49, the OOS bars start at i=50 → equity index 1 onwards.
+  const equity = allEquity.slice(1);
+
+  return { trades, equity };
+}
+
+module.exports = { runBacktest, runBacktestOOS, generateOHLCV, computeMetrics, splitCandles };

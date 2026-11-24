@@ -1,4 +1,4 @@
-const { runBacktest, computeMetrics, splitCandles } = require('../services/backtest.service');
+const { runBacktest, runBacktestOOS, computeMetrics, splitCandles } = require('../services/backtest.service');
 const profileService = require('../services/profile.service');
 const { isDemoMode } = require('../config/kite.config');
 const mockService = require('../services/mock.service');
@@ -105,8 +105,13 @@ exports.run = async (req, res) => {
 
     let oosSummary = null;
     let oosResult  = null;
-    if (outOfSampleCandles.length >= 30) {
-      oosResult = runBacktest({ candles: outOfSampleCandles, ...backtestParams });
+    // Need at least 20 OOS bars beyond the 50-bar warmup context (warmup is prepended from IS tail)
+    if (outOfSampleCandles.length >= 20 && inSampleCandles.length >= 50) {
+      oosResult = runBacktestOOS({
+        inSampleCandles,
+        outOfSampleCandles,
+        ...backtestParams,
+      });
       const oosMetrics = computeMetrics(oosResult.trades, parseInt(capital), oosResult.equity);
       oosSummary = {
         fromDate: outOfSampleCandles[0]?.date,
