@@ -18,7 +18,7 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 0 — Product Reorganization (Do First, No New Backend)
+## ✅ Mission 0 — Product Reorganization (DONE)
 
 **Objective:** Reorganize the UI around the new mission without touching existing backend logic.
 
@@ -42,7 +42,7 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 1 — Morning Brief
+## ✅ Mission 1 — Morning Brief (DONE)
 
 **Objective:** Build the first daily habit. User understands the market in <60 seconds.
 
