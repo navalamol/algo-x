@@ -6,7 +6,8 @@ const orderService = require('./order.service');
 const { isDemoModeDb, isDemoMode } = require('../config/kite.config'); // isDemoMode guards evaluateStrategy
 const memoryStore = require('./memory-store.service');
 const vixService = require('./vix.service');
-const { applyVIXAdjustment } = require('../config/trading.config');
+const { applyVIXAdjustment, TRADING_CONFIG } = require('../config/trading.config');
+const indicatorsService = require('./indicators.service');
 
 class StrategyService {
   constructor(io) {
@@ -305,14 +306,39 @@ class StrategyService {
       const currentVIX = vixService.getCurrentVIX();
       const marketCondition = vixService.getMarketCondition();
       
+      // ATR dynamic stop-loss: synthesize OHLC from close-price history
+      let baseStopLoss = tradeConfig.stopLoss;
+      const atrCfg = TRADING_CONFIG.risk.atr;
+      if (atrCfg.enabled && stock.history && stock.history.length >= atrCfg.period + 1) {
+        const closes = stock.history.map(h => h.price);
+        const ohlc = closes.map((close, i) => {
+          const open = i > 0 ? closes[i - 1] : close;
+          return {
+            open,
+            close,
+            high: Math.max(open, close) * 1.003,
+            low:  Math.min(open, close) * 0.997
+          };
+        });
+        const atr = indicatorsService.calculateATR(ohlc, atrCfg.period);
+        if (atr && stock.lastPrice > 0) {
+          const atrStopPct = (atrCfg.multiplier * atr / stock.lastPrice) * 100;
+          baseStopLoss = Math.min(
+            Math.max(atrStopPct, atrCfg.minStopPct),
+            atrCfg.maxStopPct
+          );
+          logger.info(`📐 ATR Stop-Loss: ATR=${atr.toFixed(2)}, ${atrCfg.multiplier}×ATR=${(atrCfg.multiplier * atr).toFixed(2)}, SL=${baseStopLoss.toFixed(2)}% (was fixed ${tradeConfig.stopLoss}%)`);
+        }
+      }
+
       // Apply VIX adjustments to trading parameters
       const adjustedParams = applyVIXAdjustment({
-        stopLoss: tradeConfig.stopLoss,
+        stopLoss: baseStopLoss,
         takeProfit: tradeConfig.takeProfit,
         quantity: tradeConfig.quantity || 1
       }, currentVIX);
-      
-      logger.info(`📊 VIX Adjustment: ${currentVIX.toFixed(2)} (${marketCondition}) - Qty: ${tradeConfig.quantity} → ${adjustedParams.quantity}, Stop: ${tradeConfig.stopLoss}% → ${adjustedParams.stopLoss.toFixed(2)}%`);
+
+      logger.info(`📊 VIX Adjustment: ${currentVIX.toFixed(2)} (${marketCondition}) - Qty: ${tradeConfig.quantity} → ${adjustedParams.quantity}, Stop: ${baseStopLoss.toFixed(2)}% → ${adjustedParams.stopLoss.toFixed(2)}%`);
       
       // Prepare order parameters with adjusted values
       const orderParams = {

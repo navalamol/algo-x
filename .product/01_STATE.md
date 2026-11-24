@@ -1,6 +1,29 @@
 # Current State — What's Built and Working
 
-*Last updated: November 2026*
+*Last updated: November 2026 — Post Reorientation*
+
+## Product Direction (Updated Nov 2026)
+
+The product is reorienting from "algorithmic trading platform" to **"personal Indian market intelligence and decision-support engine."**
+
+The four north-star questions Algo-X must answer:
+1. **What matters?** — What deserves my attention today?
+2. **Why?** — Why does this stock/setup matter?
+3. **Evidence?** — Has this setup historically worked?
+4. **What changed?** — What changed in my portfolio/watchlist?
+
+Existing modules (scanner, radar, strategy, heatmap, paper trading) are **preserved** as a secondary Advanced Trading layer. They are not the primary product entry point.
+
+See `ALGO_X_PRODUCT_REORIENTATION_AND_EXECUTION_PLAN.md` for the full strategic document.
+
+---
+
+## ⚠️ Integrity Issue (Must Fix Before Claiming Historical Evidence)
+
+- **Backtesting engine uses synthetic OHLCV** in demo mode but displays real-looking metrics (win rate, Sharpe, profit factor) without a clear `SIMULATION / ILLUSTRATIVE ONLY` label. This violates the product trust requirement (§13 of reorientation doc).
+- **Strategy library win rates are hardcoded** (65%, 68%, 72% etc.) — these are not evidence-backed. They must either be removed or labelled as illustrative.
+
+---
 
 ## Status: Paper Trading Mode, All Services Running
 
@@ -133,7 +156,7 @@ Recharts `BarChart` above signals table showing last 14 days of journal P&L with
 - **Backtesting uses synthetic data in demo mode** — real historical candles require a live Kite API key
 - **No group features** — leaderboard, shared watchlists not implemented
 - **MockService data is static** — demo mode shows 7 fixed instruments, not real NSE universe
-- **ATR implemented but unused** — `calculateATR()` exists but stop-loss is still fixed %
+- **ATR stop-loss active in live mode** — `calculateATR()` wired into `strategy.service.js`; falls back to fixed % in demo mode (no ticker feed)
 
 ## Fixed (Nov 2026)
 

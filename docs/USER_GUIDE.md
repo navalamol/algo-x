@@ -371,3 +371,44 @@ In demo mode, **synthetic OHLCV data is generated automatically** — no Kite AP
 - **Win Rate > 50%** — but check avg win vs avg loss too
 - **Sharpe > 1** — good risk-adjusted return
 
+---
+
+## 12. ATR Dynamic Stop-Loss
+
+**Available in:** Live mode (Kite API key configured) with auto-trading enabled
+
+### What it does
+Instead of a fixed percentage stop-loss (e.g. always 2%), the ATR (Average True Range) stop-loss adapts to each stock's current volatility. A stock moving ±50 points per bar gets a wider stop than one moving ±5 points — avoiding premature stops on volatile stocks while keeping tight stops on quiet ones.
+
+**Formula:** `stop_loss_price = entry_price − (1.5 × ATR₁₄)`
+
+The percentage equivalent is clamped between **0.5%** (minimum) and **10%** (maximum) to prevent extreme values.
+
+### How it works
+When a strategy signal fires, the engine:
+1. Takes the last 14+ price bars from the stock's history
+2. Synthesizes OHLC (open, high, low, close) from consecutive close prices
+3. Computes ATR(14) using the standard True Range formula
+4. Derives `atrStopPct = (1.5 × ATR / entryPrice) × 100`
+5. Clamps to [0.5%, 10%], then applies VIX adjustment on top
+6. Falls back to the strategy's fixed stop-loss if fewer than 15 history bars are available
+
+### Checking the log
+When a trade fires, the backend log shows:
+```
+📐 ATR Stop-Loss: ATR=12.50, 1.5×ATR=18.75, SL=1.21% (was fixed 2%)
+📊 VIX Adjustment: 18.5 (NORMAL) - Qty: 1 → 1, Stop: 1.21% → 1.42%
+```
+
+### Config (`backend/config/trading.config.js`)
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `risk.atr.enabled` | `true` | Turn ATR stop-loss on/off |
+| `risk.atr.multiplier` | `1.5` | Wider = fewer premature stops; tighter = more protection |
+| `risk.atr.period` | `14` | ATR lookback bars |
+| `risk.atr.minStopPct` | `0.5` | Minimum stop-loss % |
+| `risk.atr.maxStopPct` | `10` | Maximum stop-loss % |
+
+### Demo mode
+The mock service exposes `getOHLCHistory(symbol)` which derives deterministic OHLC from the scenario price histories, so ATR can be computed without a real Kite connection. Strategy evaluation is skipped in demo mode (no live ticker feed), so ATR stop-loss activates once a live API key is configured.
+

@@ -320,6 +320,12 @@ class IndicatorsService {
       volume: h.volume
     }));
 
+    // Synthesize OHLC from consecutive close prices for ATR
+    const ohlc = prices.map((close, i) => {
+      const open = i > 0 ? prices[i - 1] : close;
+      return { open, close, high: Math.max(open, close) * 1.003, low: Math.min(open, close) * 0.997 };
+    });
+
     const indicators = {
       rsi: this.calculateRSI(prices),
       sma20: this.calculateSMA(prices, 20),
@@ -330,6 +336,7 @@ class IndicatorsService {
       macd: this.calculateMACD(prices),
       bollingerBands: this.calculateBollingerBands(prices),
       stochasticRSI: this.calculateStochasticRSI(prices),
+      atr: this.calculateATR(ohlc),
       buyerSellerRatio: this.calculateBuyerSellerRatio(stockData.depth),
       buyerSellerState: this.detectBuyerSellerState(stockData.depth),
       supportResistance: this.detectSupportResistance(prices)

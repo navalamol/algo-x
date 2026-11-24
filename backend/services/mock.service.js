@@ -135,6 +135,26 @@ class MockService {
     return this.scenarioHistories.get(symbol) || [];
   }
 
+  /**
+   * Derives synthetic OHLC from the scenario price history.
+   * Each bar: open = previous close, close = current price,
+   * high/low use a deterministic ±0.3% range so ATR is computable
+   * without Math.random (keeps demo data stable across runs).
+   */
+  getOHLCHistory(symbol) {
+    const history = this.scenarioHistories.get(symbol) || [];
+    return history.map((bar, i) => {
+      const open  = i > 0 ? history[i - 1].price : bar.price;
+      const close = bar.price;
+      return {
+        open,
+        close,
+        high: Math.max(open, close) * 1.003,
+        low:  Math.min(open, close) * 0.997
+      };
+    });
+  }
+
   // ── Depth bias ───────────────────────────────────────────────────────────
 
   _getDepthBias(symbol) {

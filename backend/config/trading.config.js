@@ -32,7 +32,14 @@ const TRADING_CONFIG = {
     maxDailyTrades: 20,           // Max 20 trades per day
     maxConcurrentPositions: 5,   // Max 5 open positions
     maxPositionSize: 100000,     // Max ₹1L per position
-    riskPerTrade: 1              // Risk 1% of capital per trade
+    riskPerTrade: 1,              // Risk 1% of capital per trade
+    atr: {
+      enabled: true,
+      multiplier: 1.5,            // stop = entry - (1.5 × ATR)
+      period: 14,                 // ATR lookback bars
+      minStopPct: 0.5,            // floor: never tighter than 0.5%
+      maxStopPct: 10              // ceiling: never wider than 10%
+    }
   },
 
   // Order Defaults
