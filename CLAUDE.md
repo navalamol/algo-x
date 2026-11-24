@@ -93,7 +93,7 @@ Old Dashboard moved from `/` to `/dashboard`. Items with `soon: true` render as 
 | Mission 0 | Product reorientation — Algo-X branding, nav restructure, simulation disclaimers | ✅ Done |
 | Mission 1 | Morning Brief — Yahoo Finance, REST endpoint, Telegram upgrade, Intelligence Home | ✅ Done |
 | Mission 2 | Opportunity Ranking Engine — multi-factor score, explainable breakdown | ✅ Done |
-| Mission 3 | Evidence Layer — per-setup historical context | Planned |
+| Mission 3 | Evidence Layer — Why This Stock evidence cards with signals, indicators, key levels | ✅ Done |
 | Mission 4 | What Changed — portfolio diff since last session | Planned |
 | Mission 5 | Trade Journal UI | Planned |
 | Mission 6 | Group Dashboard / leaderboard | Planned |
@@ -107,11 +107,10 @@ Old Dashboard moved from `/` to `/dashboard`. Items with `soon: true` render as 
 
 ## What Does NOT Exist Yet
 
-- Evidence layer — per-setup historical pass/fail rates from real data (Mission 3 — next)
-- Trade journal UI (backend `journal.json` exists, no frontend)
+- What Changed — portfolio/watchlist diff since last session (Mission 4 — next)
+- Real historical backtesting with Kite `getHistoricalData()` (Mission 5)
 - Group dashboard / leaderboard
 - Real money execution (paper trading only)
-- Evidence layer — per-setup historical pass/fail rates from real data
 
 ## Coding Conventions
 

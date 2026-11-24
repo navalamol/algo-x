@@ -90,16 +90,16 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 3 — Why This Stock (Evidence Cards)
+## ✅ Mission 3 — Why This Stock (Evidence Cards) (DONE)
 
 **Objective:** User understands why a stock ranked highly without opening 5 external tools.
 
-**What to build:**
-- Per-stock evidence card: Fundamental summary (if available), Technical positives/risks, Market/sector context, Data freshness timestamps
-- `GET /api/opportunities/:symbol/evidence`
-- Frontend: expandable evidence panel on each opportunity card
-
-**Effort:** ~2 days
+**What was built:**
+- `EvidenceService` — computes 7 signal types (RSI, MACD, SMA trend, Bollinger, Volume, StochRSI, VWAP), builds plain-English summary
+- `GET /api/opportunities/:symbol/evidence` — per-stock evidence card with signals, raw technicals, key levels, sector
+- Frontend: 2-tab expanded panel on each OpportunityCard — "Score Breakdown" (existing) + "Why This Stock" (new); evidence loads on first tab view
+- Full demo mode support — all 7 instruments generate realistic evidence from scenario histories
+- USER_GUIDE.md section 12 added
 
 ---
 

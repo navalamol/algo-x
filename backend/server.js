@@ -35,6 +35,7 @@ const heatmapService = require('./services/heatmap.service');
 const AlertService = require('./services/alert.service');
 const morningBriefService = require('./services/morning-brief.service');
 const opportunityService = require('./services/opportunity.service');
+const evidenceService = require('./services/evidence.service');
 
 const app = express();
 const server = http.createServer(app);
@@ -227,6 +228,7 @@ server.listen(PORT, () => {
 
     // Wire OpportunityService
     opportunityService.setScannerService(scannerService);
+    evidenceService.setScannerService(scannerService);
 
     // Morning market brief — 9:00 AM IST, Mon–Fri
     cron.schedule('0 9 * * 1-5', async () => {

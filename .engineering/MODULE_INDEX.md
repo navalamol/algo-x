@@ -29,7 +29,7 @@
 | `backend/controllers/alert.controller.js` | Create/list/delete alerts, trigger test |
 | `backend/controllers/demo.controller.js` | GET/POST `/api/demo/mode` — runtime demo toggle |
 | `backend/controllers/backtest.controller.js` | POST `/api/backtest/run` — run backtest; GET `/api/backtest/strategies` — list strategies |
-| `backend/controllers/opportunities.controller.js` | GET `/api/opportunities` — ranked opportunity list with score breakdown |
+| `backend/controllers/opportunities.controller.js` | GET `/api/opportunities` — ranked opportunity list; GET `/api/opportunities/:symbol/evidence` — per-stock evidence card |
 
 ### Services (business logic)
 
@@ -54,6 +54,7 @@
 | `backend/services/backtest.service.js` | Bar-by-bar backtest simulator: `generateOHLCV()`, `runBacktest()`, `computeMetrics()` |
 | `backend/services/demo-seed.service.js` | Seeds MemoryStore with 25 trades + 5 strategies from `profiles/amol/trades.json` on demo startup |
 | `backend/services/opportunity.service.js` | Scores instruments across 5 factors (Trend 25%, Momentum 20%, Volume 20%, Rel. Strength 20%, VIX 15%); returns ranked list with per-factor reasons |
+| `backend/services/evidence.service.js` | Builds per-stock evidence card: 7 signal types (RSI, MACD, SMA, Bollinger, Volume, StochRSI, VWAP), plain-English summary, raw indicator values, key levels, sector |
 
 ### Models (MongoDB Schemas)
 

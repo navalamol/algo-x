@@ -133,6 +133,18 @@ Paper / Live / All tabs. Stat cards (total, win rate, net P&L, open positions). 
 
 Bar-by-bar simulator on historical or synthetic OHLCV data. Computes RSI, SMA20/50, MACD, Bollinger Bands, VWAP per bar. Checks strategy entry conditions; executes stop-loss / take-profit. Returns 6 metrics (win rate, profit factor, max drawdown, Sharpe approx), equity curve, monthly P&L bars, and full trade log. Runs entirely on synthetic data in demo mode — no Kite API key needed.
 
+### Evidence Cards — Why This Stock (`/opportunities` → expand → "Why This Stock", added Nov 2026)
+
+Per-stock evidence layer answering "why does this stock rank highly?" without opening external tools.
+
+- `EvidenceService` — computes 7 signal types: RSI, MACD, SMA Trend, Bollinger Bands, Volume, StochRSI, VWAP
+- Generates a plain-English 1–2 sentence summary + up to 6 classified signals (positive/risk/neutral)
+- Returns raw indicator values, key price levels (support, resistance, VWAP), and sector tag
+- `GET /api/opportunities/:symbol/evidence` → `{ summary, signals, technicals, keyLevels, sector, dataPoints }`
+- 2-minute server-side cache per symbol
+- Frontend: OpportunityCard now has two tabs when expanded — "Score Breakdown" and "Why This Stock"; evidence loads on first view
+- Demo mode: all 7 scenario instruments generate complete realistic evidence cards
+
 ### Opportunity Ranking Engine (`/opportunities`, added Nov 2026)
 
 Multi-factor scoring engine. `OpportunityService` scores every instrument across five factors (Trend 25%, Momentum/RSI 20%, Volume 20%, Relative Strength vs NIFTY 20%, VIX Regime 15%). Each factor returns a numeric score and a plain-English reason string — no black-box rankings.

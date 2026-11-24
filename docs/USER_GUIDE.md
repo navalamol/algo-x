@@ -555,3 +555,81 @@ GET /api/opportunities
 |-------|---------|
 | `live` | Scores computed from live scanner price histories |
 | `demo` | Scores computed from scenario price histories (mock service) |
+
+---
+
+## 12. Evidence Cards — Why This Stock (`/opportunities` → expand → "Why This Stock")
+
+**What it does:** Each opportunity card has a second tab — "Why This Stock" — that provides a deeper evidence layer: plain-English signals, all technical indicator values, and key price levels. This answers *why* a stock ranked highly without opening 5 external tools.
+
+### How to use
+1. Navigate to **Opportunities** in the sidebar.
+2. Click any opportunity card to expand it.
+3. The expanded panel now has two tabs: **Score Breakdown** (factor scores) and **Why This Stock** (evidence).
+4. Switch to **Why This Stock** — evidence loads automatically on first view.
+5. Evidence is cached for 2 minutes server-side; switch away and back to reload.
+
+### Reading the evidence panel
+
+**Summary line** — a 1–2 sentence plain-English narrative describing the stock's technical posture (e.g. "HDFCBANK has a favorable setup with 3 positive signals and no major risks").
+
+**Technical Signals** — up to 6 key signals extracted from all computed indicators:
+| Signal type | Icon | Meaning |
+|-------------|------|---------|
+| Positive | ✅ green | Bullish signal worth noting |
+| Risk | ⚠️ red | A flag that warrants caution |
+| Neutral | ⬛ grey | Present but not decisively bullish or bearish |
+
+Each signal has a short label (e.g. "RSI Momentum Zone") and a detail line explaining the specific value.
+
+**Indicators panel** — raw computed values:
+- RSI (14), SMA 20, SMA 50, VWAP, ATR (14), Volume vs Avg
+- BB Upper / Lower, MACD Histogram, StochRSI
+
+**Key Levels** — Support, Resistance, VWAP anchors from recent price history.
+
+**Sector** — sector classification from the sector mapping (e.g. Banking, IT, Energy).
+
+### Signal types generated
+
+| Signal label | Positive when | Risk when |
+|---|---|---|
+| RSI | 25–65 (oversold or momentum zone) | >72 overbought |
+| MACD | Histogram > 0 | Histogram < 0 |
+| SMA Trend | Price > SMA20, SMA20 > SMA50 | Price < SMA20 or death cross |
+| Bollinger Band | Near lower band (<10%) | Near upper band (>90%) |
+| Volume | ≥ 1.5× average | < 0.7× average |
+| StochRSI | Oversold (<20) | Overbought (>80) |
+| VWAP | Price above VWAP | Price below VWAP |
+
+### Demo mode
+Evidence works fully in demo mode — all 7 instruments generate a complete evidence card from their scenario price histories. Each instrument's pre-biased history produces realistic (and different) signals:
+
+| Symbol | Expected evidence signals |
+|--------|--------------------------|
+| HDFCBANK | Above VWAP, SMA Uptrend, Elevated Volume |
+| INFY | RSI Overbought risk (RSI ~80), MACD Bullish, Near Upper Band risk |
+| RELIANCE | MACD Bullish, SMA Uptrend, Above VWAP |
+| SBIN | RSI Oversold positive, Near Lower Band, Below VWAP risk |
+| TCS | StochRSI Oversold positive, Below SMA20 risk |
+| ICICIBANK | Volume Surge positive, Mid Bollinger neutral |
+| WIPRO | RSI Overbought risk, StochRSI Overbought risk, Above VWAP |
+
+### REST endpoint
+```
+GET /api/opportunities/:symbol/evidence
+→ { success: true, data: { symbol, name, price, generatedAt, dataSource, summary, signals, technicals, keyLevels, sector, dataPoints } }
+```
+
+**signals array item:**
+```json
+{ "type": "positive|risk|neutral", "label": "RSI Momentum Zone", "detail": "RSI at 54.2 — ideal momentum zone. Not overbought, trending higher." }
+```
+
+**technicals object:**
+```json
+{ "rsi": 54.2, "sma20": 1680.5, "sma50": 1668.0, "vwap": 1675.0, "atr": 12.5, "volumeVsAvg": 1.4,
+  "macd": { "macd": 5.2, "signal": 3.1, "histogram": 2.1, "bullish": true },
+  "stochRsi": { "value": 62.0, "overbought": false, "oversold": false },
+  "bollingerBands": { "upper": 1720.0, "middle": 1680.0, "lower": 1640.0, "pctB": 0.72 } }
+```
