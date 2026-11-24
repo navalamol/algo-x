@@ -108,6 +108,11 @@ const apiService = {
     return axios.get(`${API_BASE_URL}/strategies/signals/active`);
   },
 
+  // Trade Journal (profile-based, reads profiles/{name}/trades.json)
+  getJournalTrades: (profileName = 'amol') => {
+    return axios.get(`${API_BASE_URL}/profiles/${profileName}/trades`);
+  },
+
   // Generic HTTP helpers for new feature components
   get: (path, params = {}) => axios.get(`${API_BASE_URL}${path}`, { params }),
   post: (path, data = {}) => axios.post(`${API_BASE_URL}${path}`, data),

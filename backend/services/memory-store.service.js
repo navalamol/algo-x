@@ -164,6 +164,19 @@ class MemoryStore {
   }
 
   /**
+   * Bulk-insert documents, preserving any _id already on them.
+   * Used by the demo seeder to pre-populate collections at startup.
+   */
+  seed(collection, docs) {
+    if (!this[collection]) return;
+    docs.forEach(doc => {
+      const id = String(doc._id || this.autoIncrementIds[collection]++);
+      this[collection].set(id, { ...doc, _id: id });
+    });
+    logger.info(`📦 Memory store seeded: ${docs.length} ${collection}`);
+  }
+
+  /**
    * Clear all data
    */
   reset() {

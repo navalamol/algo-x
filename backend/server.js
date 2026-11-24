@@ -96,6 +96,13 @@ const initializeAuth = async () => {
 // Initialize auth after a short delay to ensure server is ready
 setTimeout(initializeAuth, 1000);
 
+// Seed demo data into MemoryStore before services start
+const { isDemoModeDb } = require('./config/kite.config');
+if (isDemoModeDb()) {
+  const seedDemo = require('./services/demo-seed.service');
+  seedDemo();
+}
+
 // Initialize services
 const tickerService = new TickerService(io);
 const strategyService = new StrategyService(io);
