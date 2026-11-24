@@ -1,0 +1,53 @@
+{
+  "profile": {
+    "name": "shailja",
+    "displayName": "shailja",
+    "createdAt": "2026-02-24T18:53:59.831Z",
+    "lastActive": "2026-02-24T19:50:18.522Z"
+  },
+  "trading": {
+    "capital": 100000,
+    "riskLevel": "MODERATE",
+    "paperTrading": true,
+    "maxDailyTrades": 10,
+    "maxPositionSize": 50000,
+    "defaultStopLoss": 2,
+    "defaultTakeProfit": 5,
+    "riskPerTrade": 1,
+    "maxDailyLoss": 5000,
+    "tradingHours": {
+      "start": "09:15",
+      "end": "15:30"
+    },
+    "exchanges": [
+      "NSE"
+    ],
+    "notifications": {
+      "telegram": {
+        "enabled": false,
+        "botToken": "",
+        "chatId": "",
+        "onTradeExecuted": true,
+        "onDailySummary": true,
+        "onRiskAlert": true
+      }
+    },
+    "preferences": {
+      "autoExecute": false,
+      "requireConfirmation": true,
+      "waitAfterStopLoss": 300,
+      "cooldownPeriod": 1800
+    }
+  },
+  "statistics": {
+    "totalTrades": 0,
+    "totalPnL": 0,
+    "winningTrades": 0,
+    "losingTrades": 0,
+    "bestTrade": 0,
+    "worstTrade": 0,
+    "currentStreak": 0,
+    "bestStreak": 0,
+    "worstStreak": 0
+  }
+}

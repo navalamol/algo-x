@@ -1,0 +1,53 @@
+{
+  "profile": {
+    "name": "amol",
+    "displayName": "amol",
+    "createdAt": "2026-02-24T18:53:23.471Z",
+    "lastActive": "2026-06-04T09:22:30.204Z"
+  },
+  "trading": {
+    "capital": 100000,
+    "riskLevel": "AGGRESSIVE",
+    "paperTrading": true,
+    "maxDailyTrades": 20,
+    "maxPositionSize": 100000,
+    "defaultStopLoss": 3,
+    "defaultTakeProfit": 8,
+    "riskPerTrade": 2,
+    "maxDailyLoss": 10000,
+    "tradingHours": {
+      "start": "09:15",
+      "end": "15:30"
+    },
+    "exchanges": [
+      "NSE"
+    ],
+    "notifications": {
+      "telegram": {
+        "enabled": false,
+        "botToken": "",
+        "chatId": "",
+        "onTradeExecuted": true,
+        "onDailySummary": true,
+        "onRiskAlert": true
+      }
+    },
+    "preferences": {
+      "autoExecute": false,
+      "requireConfirmation": true,
+      "waitAfterStopLoss": 300,
+      "cooldownPeriod": 1800
+    }
+  },
+  "statistics": {
+    "totalTrades": 0,
+    "totalPnL": 0,
+    "winningTrades": 0,
+    "losingTrades": 0,
+    "bestTrade": 0,
+    "worstTrade": 0,
+    "currentStreak": 0,
+    "bestStreak": 0,
+    "worstStreak": 0
+  }
+}
