@@ -174,7 +174,7 @@ const StrategyLibrary = ({ profileName, onStrategyAdopted }) => {
                     <Grid item xs={6}>
                       <Box>
                         <Typography variant="caption" color="text.secondary">
-                          Win Rate
+                          Win Rate <span style={{ fontStyle: 'italic', opacity: 0.6 }}>(illustrative)</span>
                         </Typography>
                         <Typography variant="h6" color="success.main" fontWeight="bold">
                           {strategy.backtest && strategy.backtest.winRate}%

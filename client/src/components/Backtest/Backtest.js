@@ -95,6 +95,9 @@ export default function Backtest() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Backtesting</Typography>
+      <Alert severity="warning" sx={{ mb: 2 }}>
+        <strong>SIMULATION / ILLUSTRATIVE ONLY</strong> — In demo mode all results are based on synthetically generated price data, not real NSE historical candles. Win rates, Sharpe ratios and drawdown figures shown here are <strong>not evidence of real performance</strong>. Real historical backtesting requires a live Kite API key (Mission 5).
+      </Alert>
       <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
         Simulate a strategy on historical data to evaluate performance before going live.
         {' '}In demo mode, synthetic price data is generated automatically.

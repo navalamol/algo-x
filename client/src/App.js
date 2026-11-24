@@ -16,7 +16,8 @@ import {
   ThemeProvider,
   createTheme,
   Chip,
-  Tooltip
+  Tooltip,
+  Divider
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -29,9 +30,14 @@ import {
   GridView,
   NotificationsActive,
   MenuBook as MenuBookIcon,
-  Science as ScienceIcon
+  Science as ScienceIcon,
+  Home as HomeIcon,
+  LightbulbOutlined,
+  ChangeHistory
 } from '@mui/icons-material';
+import { ListSubheader } from '@mui/material';
 
+import IntelligenceHome from './components/IntelligenceHome/IntelligenceHome';
 import Dashboard from './components/Dashboard/Dashboard';
 import StockFilter from './components/StockFilter/StockFilter';
 import StrategyBuilder from './components/StrategyBuilder/StrategyBuilder';
@@ -124,18 +130,44 @@ function App() {
     }
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Stock Filter', icon: <ShowChart />, path: '/filter' },
-    { text: 'Strategies', icon: <TrendingUp />, path: '/strategies' },
-    { text: 'Trade History', icon: <History />, path: '/trades' },
-    { text: 'Order Radar', icon: <RadarIcon />, path: '/radar' },
-    { text: 'Scanner', icon: <SearchIcon />, path: '/scanner' },
-    { text: 'Heatmap', icon: <GridView />, path: '/heatmap' },
-    { text: 'Alerts', icon: <NotificationsActive />, path: '/alerts' },
-    { text: 'Trade Journal', icon: <MenuBookIcon />, path: '/journal' },
-    { text: 'Backtest', icon: <ScienceIcon />, path: '/backtest' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+  const navSections = [
+    {
+      items: [
+        { text: 'Home', icon: <HomeIcon />, path: '/' },
+      ]
+    },
+    {
+      header: 'Intelligence',
+      items: [
+        { text: 'Opportunities', icon: <LightbulbOutlined />, path: '/', soon: true },
+        { text: 'What Changed', icon: <ChangeHistory />, path: '/', soon: true },
+      ]
+    },
+    {
+      header: 'Market',
+      items: [
+        { text: 'Scanner', icon: <SearchIcon />, path: '/scanner' },
+        { text: 'Order Radar', icon: <RadarIcon />, path: '/radar' },
+        { text: 'Sector Heatmap', icon: <GridView />, path: '/heatmap' },
+        { text: 'Stock Filter', icon: <ShowChart />, path: '/filter' },
+      ]
+    },
+    {
+      header: 'Trading',
+      items: [
+        { text: 'Strategies', icon: <TrendingUp />, path: '/strategies' },
+        { text: 'Backtest', icon: <ScienceIcon />, path: '/backtest' },
+        { text: 'Trade Journal', icon: <MenuBookIcon />, path: '/journal' },
+        { text: 'Trade History', icon: <History />, path: '/trades' },
+        { text: 'Alerts', icon: <NotificationsActive />, path: '/alerts' },
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+      ]
+    },
+    {
+      items: [
+        { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+      ]
+    },
   ];
 
   return (
@@ -145,8 +177,8 @@ function App() {
         <Box sx={{ display: 'flex' }}>
           <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
             <Toolbar>
-              <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                Kite Algo Trading Platform
+              <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold', letterSpacing: 0.5 }}>
+                Algo-X
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Tooltip title={demoMode ? 'Demo mode ON — using mock data. Click to switch to live.' : 'Live mode — click to enable mock/demo data.'}>
@@ -212,14 +244,35 @@ function App() {
           >
             <Toolbar />
             <Box sx={{ overflow: 'auto' }}>
-              <List>
-                {menuItems.map((item) => (
-                  <ListItem key={item.text} disablePadding>
-                    <ListItemButton component={Link} to={item.path}>
-                      <ListItemIcon>{item.icon}</ListItemIcon>
-                      <ListItemText primary={item.text} />
-                    </ListItemButton>
-                  </ListItem>
+              <List dense>
+                {navSections.map((section, si) => (
+                  <React.Fragment key={si}>
+                    {section.header && (
+                      <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '28px', fontSize: '0.65rem', letterSpacing: 1.2, mt: si > 0 ? 0.5 : 0 }}>
+                        {section.header}
+                      </ListSubheader>
+                    )}
+                    {section.items.map((item) => (
+                      <ListItem key={item.text} disablePadding>
+                        <ListItemButton
+                          component={item.soon ? 'div' : Link}
+                          to={item.soon ? undefined : item.path}
+                          disabled={item.soon}
+                          sx={{ opacity: item.soon ? 0.45 : 1, py: 0.6 }}
+                        >
+                          <ListItemIcon sx={{ minWidth: 36, '& svg': { fontSize: '1.1rem' } }}>{item.icon}</ListItemIcon>
+                          <ListItemText
+                            primary={item.text}
+                            primaryTypographyProps={{ fontSize: '0.85rem' }}
+                          />
+                          {item.soon && (
+                            <Chip label="soon" size="small" sx={{ fontSize: '0.6rem', height: 16, px: 0 }} />
+                          )}
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                    {si < navSections.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                  </React.Fragment>
                 ))}
               </List>
             </Box>
@@ -229,7 +282,8 @@ function App() {
             <Toolbar />
             <Container maxWidth="xl">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<IntelligenceHome />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/filter" element={<StockFilter />} />
                 <Route path="/strategies" element={<StrategyBuilder />} />
                 <Route path="/settings" element={<Settings />} />
