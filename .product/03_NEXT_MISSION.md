@@ -1,93 +1,83 @@
-# Next Mission — Backtesting Engine
+# Next Mission
 
-*Status: Queued. Previous: Alert Manager, Sector Heatmap, Order Radar (all complete).*
+*Updated after strategic review Nov 2026. Scan Watchdog is DONE.*
 
----
+## Just Completed: Scan Watchdog + VIX Fix
 
-## Problem
-
-We have 10 strategies ready to activate and a paper trading engine — but no way to know if a strategy actually worked on past data before turning it on. Without backtesting, we're guessing. The first real validation loop is weeks of paper trading, which is slow. A backtesting engine compresses that validation from weeks to minutes.
-
----
-
-## Part A — Historical Data Foundation
-
-**Goal:** Download and store OHLCV data for Nifty 50 stocks locally so backtests can run offline.
-
-### What It Includes
-
-1. **`scripts/download-history.js`** — CLI script using Kite Historical API to download candle data for a list of symbols, saves to `data/historical/{SYMBOL}_{timeframe}.json`
-2. **Data format contract** — standardize the JSON schema so the backtest engine reads it cleanly: `{ symbol, timeframe, candles: [{timestamp, open, high, low, close, volume}] }`
-3. **Seed data for 10 key symbols** — RELIANCE, TCS, INFY, SBIN, HDFC, ICICIBANK, TATAMOTORS, ITC, AXISBANK, WIPRO — 1 year of daily candles minimum
-
-### Why This Matters
-
-The backtest engine is useless without data. This creates a reusable offline data store that also supports future features like correlation analysis and drawdown studies.
+**What's now live:**
+- Background watch mode: `ScannerService.startWatching(templateId)` polls every 2 minutes
+- New match detection: diffs current matches vs previous cycle, fires only on new entrants
+- Rich Telegram alert: RSI, volume×avg, VWAP status, Radar score, VIX condition, sector
+- Morning brief cron: 9:00 AM IST Mon–Fri, all templates summarized, sent to Telegram
+- UI: Watch toggle on each template card, new match feed, Snackbar notifications
+- VIX fixed: Kite Connect API primary source, NSE fallback, demo mode randomized
 
 ---
 
-## Part B — Backtest Engine
+## Mission 2: Trade Journal UI (Priority: High)
 
-**Goal:** Run any saved strategy against historical data and get a performance report in under 10 seconds.
+**Why:** Every paper trade is logged to `profiles/{name}/trades.json` but there's no UI to review them. Without a journal UI, learning from trades is impossible.
 
-### What It Does
+**What to build:**
+- Trade history table: entry/exit price, P&L, duration, strategy/template used
+- Filter by date range, strategy, outcome (win/loss)
+- P&L chart over time (equity curve)
+- Per-trade notes field (Y/N reply from Telegram + optional reason)
 
-- Takes a strategy (by ID from the strategy library or custom conditions) and a symbol + date range
-- Replays candle data, recalculates indicators at each bar, evaluates strategy conditions
-- Simulates entry/exit with the same stop-loss and take-profit rules as the live engine
-- Outputs: total return %, win rate, # trades, avg profit per trade, max drawdown, Sharpe ratio, best/worst trade, equity curve (array of portfolio values over time)
+**Files:**
+- Create `client/src/components/TradeJournal/TradeJournal.js`
+- Add `/api/journal/:profileName` route reading `profiles/{name}/trades.json`
+- Wire into sidebar nav
 
-### What It Reuses
-
-- `backend/services/indicators.service.js` — all indicator calculations are already there
-- Strategy condition evaluation logic from `backend/services/strategy.service.js`
-- Same stop-loss/take-profit math as `backend/services/paper-trading.service.js`
-
-### API
-
-```
-POST /api/backtest/run
-Body: { strategyId, symbol, fromDate, toDate, capital }
-Response: { totalReturn, winRate, trades, maxDrawdown, sharpe, equityCurve }
-```
-
-### UI
-
-- New tab "Backtest" inside Strategy Builder page
-- Input: symbol dropdown, date range picker, run button
-- Output: metrics cards + simple line chart for equity curve
-- Compare button: run same strategy on 3 different symbols side by side
-
-### Success Criteria
-
-1. Can backtest RSI Oversold Reversal on RELIANCE for Jan–Jun 2025 and get a result in < 15 seconds
-2. Equity curve renders correctly in the UI
-3. Results are consistent: running the same backtest twice gives identical output
+**Effort:** ~2 days
 
 ---
 
-## Why Now
+## Mission 3: Backtesting Engine (Priority: Medium)
 
-We have profiles set up, strategies ready, and paper trading running. The natural next question is "which strategy should I actually activate?" Backtesting answers that. Without it, we're flying blind and might waste weeks paper trading a losing strategy.
+**Why:** Before risking real money, you need to know if a strategy actually worked on historical data.
 
----
+**Prerequisites:**
+- Historical OHLCV data download from Kite (`kiteService.getHistoricalData()`)
+- Data storage format decision (JSON files per instrument vs SQLite)
 
-## Platform State After This Mission
+**What to build:**
+- Download script: fetch N days of daily/minute candles for watchlist instruments
+- Backtest runner: replay price history through scan conditions, simulate entries/exits
+- Results: total return, win rate, max drawdown, Sharpe ratio
+- Compare templates head-to-head
 
-- ✅ Real-time data
-- ✅ Paper trading
-- ✅ Strategy engine
-- ✅ Telegram alerts
-- ✅ Order Radar, Scanner, Heatmap, Alerts
-- ✅ **Backtesting** ← this mission completes it
-- ⬜ Trade Journal UI
-- ⬜ Live trading confidence gate
-- ⬜ Real money execution
+**Effort:** ~1 week
 
 ---
 
-## Next Mission Queue (After This Completes)
+## Mission 4: Strategy Performance Dashboard (Priority: Medium, needs data)
 
-1. Trade Journal UI (BT-2)
-2. Strategy Performance Dashboard (BT-5)
-3. Live Trading Confidence Gate (BT-6)
+**Trigger:** Build this after 50+ paper trades exist
+
+**What to build:**
+- Win rate by template, by time-of-day, by VIX band
+- Average P&L per setup
+- Best/worst performing conditions
+- Heat map: day × hour showing which slots generate alpha
+
+**Files:**
+- Backend aggregation in `backend/services/analytics.service.js`
+- Dashboard component with Recharts
+
+---
+
+## Indicators Waiting to Be Used
+
+These are correctly implemented but no scan template references them:
+- `StochasticRSI` — add "StochRSI oversold" scan template
+- `MACD histogram` — add "MACD bullish cross" scan template
+- `ATR` — use for dynamic stop-loss sizing in paper trading
+
+---
+
+## Never Build (Until Paper Trading is Consistently Profitable)
+
+- Real money execution
+- Group leaderboard
+- Chartink webhook bridge (nice to have, not on critical path)

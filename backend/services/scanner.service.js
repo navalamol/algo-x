@@ -1,9 +1,17 @@
+const fs = require('fs');
+const path = require('path');
 const kiteService = require('./kite.service');
 const indicatorsService = require('./indicators.service');
 const scanTemplates = require('../config/scan-templates');
+const { SECTOR_MAP } = require('../config/sector-mapping');
+const vixService = require('./vix.service');
+const telegramService = require('./telegram.service');
 const { isDemoMode } = require('../config/kite.config');
 const mockService = require('./mock.service');
 const logger = require('../utils/logger');
+
+const PROFILES_DIR = path.join(__dirname, '../../profiles');
+const WATCH_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 
 class ScannerService {
   constructor(io) {
@@ -13,6 +21,16 @@ class ScannerService {
     this.watchSymbols = [];
     this.priceHistory = new Map(); // symbol -> [{price, volume}]
     this.demoMode = isDemoMode();
+
+    // Watch mode state
+    this.watchedTemplates = new Set();
+    this.lastMatchMap = new Map();   // templateId -> Set<symbol>
+    this.watchInterval = null;
+    this.radarService = null;        // injected via setRadarService()
+  }
+
+  setRadarService(service) {
+    this.radarService = service;
   }
 
   start() {
@@ -29,6 +47,7 @@ class ScannerService {
 
   stop() {
     this.isRunning = false;
+    this._stopWatchInterval();
   }
 
   setSymbols(symbols) {
@@ -37,6 +56,126 @@ class ScannerService {
 
   getTemplates() {
     return scanTemplates;
+  }
+
+  // ── Watch Mode ───────────────────────────────────────────────────────────
+
+  startWatching(templateId) {
+    const template = scanTemplates.find(t => t.id === templateId);
+    if (!template) throw new Error(`Template '${templateId}' not found`);
+
+    this.watchedTemplates.add(templateId);
+    if (!this.lastMatchMap.has(templateId)) {
+      this.lastMatchMap.set(templateId, new Set());
+    }
+
+    if (!this.watchInterval) {
+      this.watchInterval = setInterval(() => this._runWatchCycle(), WATCH_INTERVAL_MS);
+      logger.info(`👁  Scanner watch started (${WATCH_INTERVAL_MS / 1000}s interval)`);
+    }
+
+    logger.info(`👁  Watching template: ${template.name}`);
+    return { watching: true, templateId, templateName: template.name };
+  }
+
+  stopWatching(templateId) {
+    this.watchedTemplates.delete(templateId);
+    this.lastMatchMap.delete(templateId);
+
+    if (this.watchedTemplates.size === 0) {
+      this._stopWatchInterval();
+    }
+
+    logger.info(`👁  Stopped watching template: ${templateId}`);
+    return { watching: false, templateId };
+  }
+
+  getWatching() {
+    return Array.from(this.watchedTemplates).map(id => {
+      const t = scanTemplates.find(t => t.id === id);
+      return { templateId: id, templateName: t?.name || id };
+    });
+  }
+
+  _stopWatchInterval() {
+    if (this.watchInterval) {
+      clearInterval(this.watchInterval);
+      this.watchInterval = null;
+      logger.info('👁  Scanner watch interval stopped');
+    }
+  }
+
+  async _runWatchCycle() {
+    for (const templateId of this.watchedTemplates) {
+      try {
+        const matches = await this.runScan(templateId);
+        const prevSet = this.lastMatchMap.get(templateId) || new Set();
+        const currentSet = new Set(matches.map(m => m.symbol));
+
+        const newMatches = matches.filter(m => !prevSet.has(m.symbol));
+
+        this.lastMatchMap.set(templateId, currentSet);
+
+        for (const match of newMatches) {
+          const context = this._buildMatchContext(match, templateId);
+          this.io.emit('scanner:new_match', context);
+          logger.info(`👁  New match: ${match.symbol} on ${templateId}`);
+          await this._notifyTelegram(context);
+        }
+      } catch (err) {
+        logger.error(`Watch cycle error for ${templateId}:`, err.message);
+      }
+    }
+  }
+
+  _buildMatchContext(match, templateId) {
+    const template = scanTemplates.find(t => t.id === templateId);
+    const radarEntry = this.radarService?.radarStocks?.find(r => r.symbol === match.symbol);
+    const vix = vixService.getCurrentVIX();
+    const { condition: vixCondition } = vixService.getMarketCondition();
+
+    // Compute volumeVsAvg and priceAboveVwap from the match data we already have
+    const volumeVsAvg = match.buyerRatio !== null && match.volume > 0
+      ? null  // already have buyerRatio; volumeVsAvg computed inside runScan below
+      : null;
+
+    return {
+      templateId,
+      templateName: template?.name || templateId,
+      symbol: match.symbol,
+      exchange: match.exchange,
+      price: match.price,
+      change: match.change,
+      rsi: match.rsi,
+      vwap: match.vwap,
+      priceAboveVwap: match.vwap ? match.price > match.vwap : null,
+      buyerRatio: match.buyerRatio,
+      radarScore: radarEntry?.score || 0,
+      vix,
+      vixCondition,
+      sector: SECTOR_MAP[match.symbol] || null,
+      timestamp: new Date()
+    };
+  }
+
+  async _notifyTelegram(context) {
+    try {
+      if (!fs.existsSync(PROFILES_DIR)) return;
+
+      const profileDirs = fs.readdirSync(PROFILES_DIR);
+      for (const name of profileDirs) {
+        const cfgPath = path.join(PROFILES_DIR, name, 'config.json');
+        if (!fs.existsSync(cfgPath)) continue;
+        const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+        const tg = cfg?.trading?.notifications?.telegram;
+        if (!tg?.enabled || !tg.botToken || !tg.chatId) continue;
+
+        telegramService.registerBot(tg.chatId, tg.botToken, true);
+        await telegramService.notifyScanMatch(tg.chatId, context);
+      }
+    } catch (err) {
+      logger.error('Telegram scan match notify error:', err.message);
+    }
   }
 
   async runScan(templateId, customConditions = null) {

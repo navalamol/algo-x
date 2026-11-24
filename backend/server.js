@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const http = require('http');
 const socketIO = require('socket.io');
+const cron = require('node-cron');
 const connectDB = require('./config/db.config');
 const logger = require('./utils/logger');
 
@@ -197,15 +198,67 @@ server.listen(PORT, () => {
     heatmapService.start();
     alertService.start();
 
+    // Wire up cross-service dependencies
+    scannerService.setRadarService(radarService);
+
+    // Morning market brief — 9:00 AM IST, Mon–Fri
+    cron.schedule('0 9 * * 1-5', async () => {
+      logger.info('🌅 Running morning brief...');
+      try {
+        const telegramService = require('./services/telegram.service');
+        const vixService = require('./services/vix.service');
+        const fs = require('fs');
+        const path = require('path');
+        const scanTemplates = require('./config/scan-templates');
+
+        const scanSummary = [];
+        for (const template of scanTemplates) {
+          try {
+            const results = await scannerService.runScan(template.id);
+            scanSummary.push({
+              templateName: template.name,
+              count: results.length,
+              topSymbols: results.slice(0, 3).map(r => r.symbol)
+            });
+          } catch (e) { /* skip failed templates */ }
+        }
+
+        const profilesDir = path.join(__dirname, '../profiles');
+        if (!fs.existsSync(profilesDir)) return;
+        const profiles = fs.readdirSync(profilesDir);
+        const brief = {
+          vix: vixService.getCurrentVIX(),
+          vixCondition: vixService.getMarketCondition().condition,
+          scanSummary,
+          date: new Date().toLocaleDateString('en-IN')
+        };
+
+        for (const name of profiles) {
+          const cfgPath = path.join(profilesDir, name, 'config.json');
+          if (!fs.existsSync(cfgPath)) continue;
+          const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+          const tg = cfg?.trading?.notifications?.telegram;
+          if (!tg?.enabled || !tg.botToken || !tg.chatId) continue;
+          telegramService.registerBot(tg.chatId, tg.botToken, true);
+          await telegramService.sendMorningBrief(tg.chatId, brief);
+        }
+
+        logger.info('🌅 Morning brief sent');
+      } catch (err) {
+        logger.error('Morning brief error:', err.message);
+      }
+    }, { timezone: 'Asia/Kolkata' });
+
     logger.info('✅ All services started successfully');
-    logger.info('📈 India VIX monitoring active');
+    logger.info('📈 India VIX monitoring active (Kite Connect + NSE fallback)');
     logger.info('👥 Profile system ready');
     logger.info('📝 Paper trading available');
     logger.info('📱 Telegram notifications configured');
     logger.info('📡 Order flow radar active');
-    logger.info('🔍 Market scanner ready');
+    logger.info('🔍 Market scanner ready (with Watch Mode)');
     logger.info('🗺️  Sector heatmap active');
     logger.info('🔔 Alert service active');
+    logger.info('🌅 Morning brief cron scheduled (9:00 AM IST, Mon–Fri)');
     
   } catch (error) {
     logger.error('Error starting services:', error);

@@ -55,3 +55,27 @@ The backend is a single Express server (`backend/server.js`) that initializes 7 
 - Services are classes instantiated in `server.js`; controllers are thin wrappers
 - Indicators live in `backend/services/indicators.service.js` — add new ones there
 - Scan templates live in `backend/config/scan-templates.js` — array of condition objects
+
+## .plans/ Folder Convention
+
+Strategic review plans are saved to `.plans/` for reference. They are **not** read by default AI context. Only read them when doing a strategic review. Copy interesting plans there after approval.
+
+## Known Issues Fixed (Nov 2026)
+
+1. **VIX was broken** — `vix.service.js` now uses Kite Connect API as primary source. NSE is fallback only. Demo mode generates randomized VIX.
+2. **Sector mapping was empty** — `backend/config/sector-mapping.js` was entirely commented out. Now has full 50+ stock SECTOR_MAP.
+
+## Scan Watchdog (Added Nov 2026)
+
+The scanner now has a background watch mode:
+- `POST /api/scanner/watch/:templateId` — start watching a template
+- `DELETE /api/scanner/watch/:templateId` — stop watching
+- `GET /api/scanner/watching` — list active watches
+- Socket.io event `scanner:new_match` fires when a stock newly matches a watched template
+- Telegram alert sent with RSI, volume, VWAP, Radar score, VIX condition, sector
+- Morning brief cron fires at 9:00 AM IST Mon–Fri
+
+## Security Notes
+
+- `strategy.service.js` uses `new Function()` for custom conditions — **never** expose this to HTTP endpoints, it's an RCE risk
+- Cross-service wiring uses `setXService()` injection pattern to avoid circular requires

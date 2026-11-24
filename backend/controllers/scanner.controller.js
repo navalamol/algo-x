@@ -51,3 +51,37 @@ exports.setSymbols = (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+exports.startWatch = (req, res) => {
+  try {
+    const scannerService = req.app.locals.scannerService;
+    const { templateId } = req.params;
+    const result = scannerService.startWatching(templateId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('scanner.startWatch:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+exports.stopWatch = (req, res) => {
+  try {
+    const scannerService = req.app.locals.scannerService;
+    const { templateId } = req.params;
+    const result = scannerService.stopWatching(templateId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('scanner.stopWatch:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getWatching = (req, res) => {
+  try {
+    const scannerService = req.app.locals.scannerService;
+    res.json({ success: true, data: scannerService.getWatching() });
+  } catch (error) {
+    logger.error('scanner.getWatching:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

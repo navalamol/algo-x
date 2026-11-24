@@ -259,6 +259,69 @@ ${recommendation}
   }
 
   /**
+   * Notify about a new scan match (Scan Watchdog)
+   */
+  async notifyScanMatch(chatId, match) {
+    const {
+      templateName, symbol, exchange, price, change,
+      rsi, volumeVsAvg, priceAboveVwap, buyerRatio,
+      radarScore, vix, vixCondition, sector
+    } = match;
+
+    const changeSign = change >= 0 ? '+' : '';
+    const rsiTag = rsi !== null ? (rsi > 70 ? '🔴' : rsi < 30 ? '🟢' : '🟡') : '';
+    const volTag = volumeVsAvg !== null ? (volumeVsAvg > 2 ? '🔥' : volumeVsAvg > 1.5 ? '✅' : '') : '';
+    const vwapTag = priceAboveVwap ? '✅' : '❌';
+    const radarLine = radarScore > 0
+      ? `Order Flow: 🟢 Radar Score <b>${radarScore}</b>\n` : '';
+    const sectorLine = sector ? `Sector: ${sector}  |  ` : '';
+    const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    const message = `
+🔍 <b>NEW MATCH: ${templateName}</b>
+━━━━━━━━━━━━━━━━━━━━━━━━
+📊 <b>${symbol}</b> | ₹${price.toLocaleString('en-IN')} (<b>${changeSign}${change}%</b>)
+${rsi !== null ? `RSI: ${rsi} ${rsiTag}` : ''}  ${volumeVsAvg !== null ? `Vol: ${volumeVsAvg.toFixed(1)}× avg ${volTag}` : ''}  VWAP: ${vwapTag}
+${radarLine}VIX: <b>${vix}</b> (${vixCondition})
+${sectorLine}⏰ ${time}
+━━━━━━━━━━━━━━━━━━━━━━━━
+<i>Reply Y to paper trade / N to skip</i>
+    `.trim();
+
+    return this.sendMessage(chatId, message);
+  }
+
+  /**
+   * Send morning market brief
+   */
+  async sendMorningBrief(chatId, brief) {
+    const { vix, vixCondition, scanSummary, date } = brief;
+    if (!scanSummary || scanSummary.length === 0) return null;
+
+    const lines = scanSummary.map(s =>
+      `• <b>${s.templateName}</b>: ${s.count} match${s.count !== 1 ? 'es' : ''}` +
+      (s.topSymbols.length > 0 ? ` (${s.topSymbols.join(', ')})` : '')
+    ).join('\n');
+
+    const vixEmoji = vixCondition === 'NORMAL' || vixCondition === 'LOW' ? '🟢'
+      : vixCondition === 'ELEVATED' ? '🟡' : '🔴';
+
+    const message = `
+🌅 <b>Morning Market Brief</b>
+${date}
+
+${vixEmoji} India VIX: <b>${vix}</b> (${vixCondition})
+
+<b>Scan Summary:</b>
+${lines}
+
+<i>Watch mode active — you'll be notified when new setups appear.</i>
+    `.trim();
+
+    return this.sendMessage(chatId, message);
+  }
+
+  /**
    * Test Telegram connection
    */
   async testConnection(chatId, botToken) {

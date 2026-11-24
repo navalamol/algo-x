@@ -43,9 +43,9 @@ class VIXService {
    */
   async updateVIX() {
     try {
-      // Method 1: Try NSE website (may require headers)
-      const vix = await this.fetchFromNSE();
-      
+      // Try Kite Connect first (authenticated, reliable), then NSE as fallback
+      const vix = await this.fetchFromKite() || await this.fetchFromNSE();
+
       if (vix) {
         this.currentVIX = vix;
         this.lastUpdate = new Date();
@@ -72,7 +72,34 @@ class VIXService {
   }
 
   /**
-   * Fetch VIX from NSE
+   * Fetch VIX from Kite Connect quote API (primary — authenticated, reliable)
+   * India VIX trades as an index on NSE
+   */
+  async fetchFromKite() {
+    try {
+      const { isDemoMode } = require('../config/kite.config');
+      if (isDemoMode()) {
+        // In demo mode return a realistic simulated VIX so the adjustment logic exercises
+        const base = 15;
+        const jitter = (Math.random() - 0.5) * 4; // ±2 around 15
+        return Math.round((base + jitter) * 100) / 100;
+      }
+
+      const kiteService = require('./kite.service');
+      const quotes = await kiteService.getQuote(['NSE:INDIA VIX']);
+      const q = quotes['NSE:INDIA VIX'];
+      if (q && q.last_price) {
+        return q.last_price;
+      }
+      return null;
+    } catch (error) {
+      logger.warn('Kite VIX fetch failed, trying NSE fallback:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch VIX from NSE (fallback)
    */
   async fetchFromNSE() {
     try {
