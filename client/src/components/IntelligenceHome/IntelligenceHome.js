@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box, Grid, Card, CardContent, Typography, Chip, Divider,
-  Button, Alert, Skeleton, Paper, Tooltip
+  Button, Alert, Skeleton, Paper, Tooltip, List, ListItem,
+  ListItemText, ListItemIcon
 } from '@mui/material';
 import {
   TrendingUp, TrendingDown, TrendingFlat, Search, Radar as RadarIcon,
   GridView, NotificationsActive, ArrowForward, LightbulbOutlined,
-  ChangeHistory, WbSunny, AccessTime, Refresh
+  ChangeHistory, WbSunny, AccessTime, Refresh, ErrorOutline,
+  WarningAmber, InfoOutlined, FiberNewOutlined
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../../services/api.service';
@@ -346,6 +348,170 @@ function ScanSummaryCard({ brief, loading }) {
   );
 }
 
+// ── What Changed card ───────────────────────────────────────────────────────
+
+const SIG_COLOR = {
+  high:   '#ef5350',
+  medium: '#ffa726',
+  low:    'text.secondary',
+};
+
+const SIG_ICON = {
+  high:   <ErrorOutline   sx={{ fontSize: 15, color: '#ef5350' }} />,
+  medium: <WarningAmber   sx={{ fontSize: 15, color: '#ffa726' }} />,
+  low:    <InfoOutlined   sx={{ fontSize: 15, color: '#757575' }} />,
+};
+
+const CHANGE_TYPE_LABEL = {
+  rsi_zone:    'RSI',
+  volume_band: 'Volume',
+  trend_bias:  'Trend',
+  macd_flip:   'MACD',
+  vwap_cross:  'VWAP',
+};
+
+function WhatChangedCard() {
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiService.get('/changes');
+      setData(res.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load changes');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const newSession = useCallback(async () => {
+    try {
+      await apiService.post('/changes/snapshot');
+      load();
+    } catch (err) {
+      setError('Could not reset snapshot: ' + (err.response?.data?.message || err.message));
+    }
+  }, [load]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const changes = (data?.changes ?? []).slice(0, 5);
+
+  return (
+    <Card>
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <ChangeHistory sx={{ color: 'primary.main', fontSize: '1.1rem' }} />
+            <Typography variant="subtitle1" fontWeight="bold">What Changed</Typography>
+            {data?.dataSource && (
+              <Chip
+                label={data.dataSource === 'demo' ? '⚡ DEMO' : '● LIVE'}
+                size="small"
+                sx={{
+                  fontSize: '0.62rem',
+                  bgcolor: data.dataSource === 'demo' ? 'rgba(255,180,0,0.15)' : 'rgba(76,175,80,0.15)',
+                  color:   data.dataSource === 'demo' ? 'warning.light' : 'success.light',
+                }}
+              />
+            )}
+          </Box>
+          <Box display="flex" gap={1}>
+            <Tooltip title="New session — reset baseline to now">
+              <Button
+                size="small"
+                startIcon={<FiberNewOutlined sx={{ fontSize: 14 }} />}
+                onClick={newSession}
+                sx={{ textTransform: 'none', fontSize: '0.72rem', py: 0.25 }}
+                variant="outlined"
+              >
+                New Session
+              </Button>
+            </Tooltip>
+            <Tooltip title="Refresh">
+              <Button size="small" onClick={load} sx={{ minWidth: 32, p: 0.25 }}>
+                <Refresh sx={{ fontSize: 15 }} />
+              </Button>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        {data?.snapshotAt && (
+          <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 1, fontSize: '0.65rem' }}>
+            Comparing to snapshot taken {new Date(data.snapshotAt).toLocaleTimeString('en-IN')}
+            {data.symbolCount ? ` · ${data.symbolCount} symbols tracked` : ''}
+          </Typography>
+        )}
+
+        {loading && (
+          <Box>
+            {[1, 2, 3].map(i => <Skeleton key={i} variant="text" height={28} sx={{ mb: 0.5 }} animation="wave" />)}
+          </Box>
+        )}
+
+        {!loading && error && (
+          <Alert severity="error" action={<Button size="small" onClick={load}>Retry</Button>} sx={{ fontSize: '0.78rem' }}>
+            {error}
+          </Alert>
+        )}
+
+        {!loading && !error && changes.length === 0 && (
+          <Alert severity="info" sx={{ py: 0.5, fontSize: '0.78rem' }}>
+            No significant changes since last snapshot — market state is stable. Click "New Session" to reset the baseline.
+          </Alert>
+        )}
+
+        {!loading && !error && changes.length > 0 && (
+          <List dense disablePadding>
+            {changes.map((c, i) => (
+              <React.Fragment key={`${c.symbol}-${c.changeType}-${i}`}>
+                <ListItem disablePadding sx={{ py: 0.4, alignItems: 'flex-start' }}>
+                  <ListItemIcon sx={{ minWidth: 22, mt: 0.3 }}>
+                    {SIG_ICON[c.significance] || SIG_ICON.low}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box display="flex" alignItems="center" gap={0.75} flexWrap="wrap">
+                        <Typography
+                          variant="caption"
+                          fontWeight="bold"
+                          sx={{ color: SIG_COLOR[c.significance] || 'text.primary', fontSize: '0.78rem' }}
+                        >
+                          {c.symbol}
+                        </Typography>
+                        <Chip
+                          label={CHANGE_TYPE_LABEL[c.changeType] || c.changeType}
+                          size="small"
+                          sx={{ fontSize: '0.6rem', height: 16, bgcolor: 'rgba(255,255,255,0.08)' }}
+                        />
+                        {c.sector && (
+                          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+                            {c.sector}
+                          </Typography>
+                        )}
+                      </Box>
+                    }
+                    secondary={
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', lineHeight: 1.4 }}>
+                        {c.detail}
+                      </Typography>
+                    }
+                  />
+                </ListItem>
+                {i < changes.length - 1 && <Divider sx={{ ml: 3.5, borderColor: 'rgba(255,255,255,0.05)' }} />}
+              </React.Fragment>
+            ))}
+          </List>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Main page ───────────────────────────────────────────────────────────────
 
 export default function IntelligenceHome() {
@@ -397,20 +563,9 @@ export default function IntelligenceHome() {
           <ScanSummaryCard brief={brief} loading={loading} />
         </Grid>
 
-        {/* What Changed — placeholder until Mission 4 */}
+        {/* What Changed — Mission 4 */}
         <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <ChangeHistory sx={{ color: 'primary.main', fontSize: '1.1rem' }} />
-                <Typography variant="subtitle1" fontWeight="bold">What Changed</Typography>
-                <Chip label="COMING SOON" size="small" sx={{ fontSize: '0.65rem', opacity: 0.6 }} />
-              </Box>
-              <Alert severity="info" sx={{ py: 0.5, fontSize: '0.78rem' }}>
-                Change Detection (Mission 4) — will notify you when momentum, volume or sector strength shifts meaningfully in your portfolio or watchlist, without you having to poll each stock.
-              </Alert>
-            </CardContent>
-          </Card>
+          <WhatChangedCard />
         </Grid>
 
         {/* Quick access tiles */}
@@ -445,11 +600,11 @@ export default function IntelligenceHome() {
           <SectionLabel>Roadmap</SectionLabel>
           <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
             {[
-              { label: '✓ Morning Brief', done: true },
-              { label: 'Opportunity Ranking', done: false, next: true },
-              { label: 'Why This Stock', done: false },
-              { label: 'What Changed', done: false },
-              { label: 'Historical Backtesting', done: false },
+              { label: '✓ Morning Brief',       done: true  },
+              { label: '✓ Opportunities',        done: true  },
+              { label: '✓ Why This Stock',       done: true  },
+              { label: '✓ What Changed',         done: true  },
+              { label: 'Historical Evidence',    done: false },
               { label: 'Portfolio Intelligence', done: false },
             ].map((m, i) => (
               <React.Fragment key={m.label}>
@@ -457,9 +612,9 @@ export default function IntelligenceHome() {
                 <Chip
                   label={m.label}
                   size="small"
-                  variant={m.done || m.next ? 'filled' : 'outlined'}
-                  color={m.done ? 'success' : m.next ? 'primary' : 'default'}
-                  sx={{ fontSize: '0.68rem', opacity: m.done || m.next ? 1 : 0.45 }}
+                  variant={m.done ? 'filled' : 'outlined'}
+                  color={m.done ? 'success' : 'default'}
+                  sx={{ fontSize: '0.68rem', opacity: m.done ? 1 : 0.45 }}
                 />
               </React.Fragment>
             ))}

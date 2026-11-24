@@ -431,6 +431,53 @@ class MockService {
       noSetup: false,
     };
   }
+
+  getChanges() {
+    const now = new Date().toISOString();
+    return {
+      changes: [
+        {
+          symbol: 'INFY', sector: 'IT',
+          changeType: 'rsi_zone', significance: 'high',
+          from: 'momentum', to: 'overbought',
+          detail: 'INFY RSI moved from momentum zone (50–65) into overbought (>72) — momentum overextended.',
+          price: 1583.40, detectedAt: now,
+        },
+        {
+          symbol: 'SBIN', sector: 'Banking',
+          changeType: 'rsi_zone', significance: 'high',
+          from: 'building', to: 'oversold',
+          detail: 'SBIN RSI dropped into oversold zone (20–30) — potential mean-reversion setup forming.',
+          price: 601.80, detectedAt: now,
+        },
+        {
+          symbol: 'RELIANCE', sector: 'Energy',
+          changeType: 'macd_flip', significance: 'medium',
+          from: 'bearish', to: 'bullish',
+          detail: 'RELIANCE MACD flipped bullish — EMA12 crossed above EMA26 after a 25-bar decline.',
+          price: 2498.20, detectedAt: now,
+        },
+        {
+          symbol: 'TCS', sector: 'IT',
+          changeType: 'trend_bias', significance: 'medium',
+          from: 'above_sma20', to: 'downtrend',
+          detail: 'TCS trend deteriorated: price dropped below SMA20 and SMA20 crossed below SMA50.',
+          price: 3652.10, detectedAt: now,
+        },
+        {
+          symbol: 'ICICIBANK', sector: 'Banking',
+          changeType: 'volume_band', significance: 'medium',
+          from: 'normal', to: 'spike',
+          detail: 'ICICIBANK volume spiked to 2.3× average — unusual institutional activity, watch for breakout or breakdown.',
+          price: 1091.50, detectedAt: now,
+        },
+      ],
+      snapshotAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+      detectedAt: now,
+      dataSource: 'demo',
+      symbolCount: 7,
+    };
+  }
 }
 
 module.exports = new MockService();

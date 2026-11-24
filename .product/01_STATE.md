@@ -133,6 +133,18 @@ Paper / Live / All tabs. Stat cards (total, win rate, net P&L, open positions). 
 
 Bar-by-bar simulator on historical or synthetic OHLCV data. Computes RSI, SMA20/50, MACD, Bollinger Bands, VWAP per bar. Checks strategy entry conditions; executes stop-loss / take-profit. Returns 6 metrics (win rate, profit factor, max drawdown, Sharpe approx), equity curve, monthly P&L bars, and full trade log. Runs entirely on synthetic data in demo mode — no Kite API key needed.
 
+### Change Detection — What Changed (`/` → "What Changed" card, added Nov 2026)
+
+Categorical state-transition engine answering "what changed enough that I should care?"
+
+- `backend/utils/market-state.js` — shared primitive: `computeMarketState(symbol, technicals, price)` → `{ rsiZone, volumeBand, trendBias, macdBias, vwapPosition }`. Used by ChangeDetectionService and future PortfolioIntelligence.
+- `ChangeDetectionService` — snapshots state per symbol; compares on each detect cycle; emits ChangeEvents only on categorical transitions
+- Change types: `rsi_zone`, `volume_band`, `trend_bias`, `macd_flip`, `vwap_cross`
+- Significance: HIGH (RSI extreme crossings), MEDIUM (MACD flip, major trend, volume spike), LOW (VWAP cross, minor band)
+- `GET /api/changes` → sorted ChangeEvent list; `POST /api/changes/snapshot` → reset baseline
+- Frontend: `WhatChangedCard` in IntelligenceHome — loads on page load, New Session button, significance-colored list
+- 90-second server-side cache; full demo mode support via MockService.getChanges()
+
 ### Evidence Cards — Why This Stock (`/opportunities` → expand → "Why This Stock", added Nov 2026)
 
 Per-stock evidence layer answering "why does this stock rank highly?" without opening external tools.

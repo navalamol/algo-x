@@ -633,3 +633,64 @@ GET /api/opportunities/:symbol/evidence
   "stochRsi": { "value": 62.0, "overbought": false, "oversold": false },
   "bollingerBands": { "upper": 1720.0, "middle": 1680.0, "lower": 1640.0, "pctB": 0.72 } }
 ```
+
+---
+
+## 13. What Changed (`/` → "What Changed" card)
+
+**What it does:** Answers "what changed enough that I should care?" by detecting categorical state transitions in tracked stocks since your last session. Only changes significant enough to alter an investor's attention are surfaced — not every minor price move.
+
+### How to use
+1. Open the **Intelligence Home** (`/`). The "What Changed" card loads automatically.
+2. Changes are sorted by significance: **HIGH** (red) first, then **MEDIUM** (orange), then **LOW** (grey).
+3. Click **New Session** to reset the baseline to now — future changes will be detected relative to this new snapshot.
+4. The header shows when the snapshot was taken and how many symbols are being tracked.
+
+### Change types detected
+
+| Change Type | Trigger | Significance |
+|---|---|---|
+| RSI Zone | RSI crossed into/out of oversold (<30), extreme oversold (<20), or overbought (>72) | HIGH |
+| RSI Zone | RSI moved between building/momentum/strong | MEDIUM |
+| MACD | MACD histogram flipped positive ↔ negative | MEDIUM |
+| Trend | Price vs SMA20/SMA50 structure changed (e.g. uptrend → downtrend) involving a major state | MEDIUM |
+| Volume | Volume moved into spike territory (≥2× average) | MEDIUM |
+| Trend | Minor SMA20 cross (above ↔ below) | LOW |
+| Volume | Volume moved from normal to elevated or weak | LOW |
+| VWAP | Price crossed above/below VWAP | LOW |
+
+### Shared architecture note
+Change detection uses `backend/utils/market-state.js` — a shared utility that derives categorical states (rsiZone, volumeBand, trendBias, macdBias, vwapPosition) from raw indicator values. This same utility will be reused by Mission 6 (Portfolio Intelligence) to avoid duplicating threshold logic.
+
+### Demo mode
+In demo mode, 5 pre-canned changes are returned that match the scenario instrument states:
+
+| Symbol | Change | Significance |
+|---|---|---|
+| INFY | RSI: momentum → overbought | HIGH |
+| SBIN | RSI: building → oversold | HIGH |
+| RELIANCE | MACD: bearish → bullish | MEDIUM |
+| TCS | Trend: above_sma20 → downtrend | MEDIUM |
+| ICICIBANK | Volume: normal → spike | MEDIUM |
+
+### REST endpoints
+```
+GET  /api/changes           → { changes, snapshotAt, detectedAt, dataSource, symbolCount }
+POST /api/changes/snapshot  → { snapshotAt, symbolCount }   (resets baseline)
+```
+
+**ChangeEvent object:**
+```json
+{
+  "symbol": "SBIN",
+  "sector": "Banking",
+  "changeType": "rsi_zone",
+  "significance": "high",
+  "from": "building",
+  "to": "oversold",
+  "detail": "SBIN RSI dropped into oversold zone (20–30) — potential mean-reversion setup forming.",
+  "price": 601.80,
+  "detectedAt": "2026-11-24T09:15:00.000Z"
+}
+```
+

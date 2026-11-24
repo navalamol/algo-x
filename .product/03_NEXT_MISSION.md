@@ -90,7 +90,7 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## ✅ Mission 3 — Why This Stock (Evidence Cards) (DONE)
+## 🔧 Mission 3 — Why This Stock (Evidence Cards) — IMPLEMENTED (not yet validated)
 
 **Objective:** User understands why a stock ranked highly without opening 5 external tools.
 
@@ -101,19 +101,41 @@ Do not build new trading features until Mission 0–3 are validated.
 - Full demo mode support — all 7 instruments generate realistic evidence from scenario histories
 - USER_GUIDE.md section 12 added
 
+**Validation status: IMPLEMENTED** — code exists and is wired. Not yet personally validated end-to-end in the running app.
+
+**To validate:**
+- [ ] Start app in demo mode (`npm run dev:all`)
+- [ ] Navigate to `/opportunities`, expand a card
+- [ ] Switch to "Why This Stock" tab — evidence loads, signals show
+- [ ] Confirm all 7 instruments produce evidence cards with realistic signals
+- [ ] Check evidence endpoint directly: `GET /api/opportunities/INFY/evidence`
+
 ---
 
-## Mission 4 — What Changed
+## 🔧 Mission 4 — What Changed — IMPLEMENTED (not yet personally validated)
 
 **Objective:** User can stop manually polling every stock in their watchlist.
 
-**What to build:**
-- `ChangeDetectionService` — compares current snapshot vs last known state per watchlist stock
-- Change types: Price breakout/breakdown, Momentum shift, Volume anomaly, Relative strength change, Sector leadership change
-- Surfaces only meaningful changes, filters noise
-- Hooks into AlertService for Telegram delivery
+**What was built:**
+- `backend/utils/market-state.js` — shared primitive: derives categorical state (rsiZone, volumeBand, trendBias, macdBias, vwapPosition) from raw indicator values. Reused by Mission 6.
+- `ChangeDetectionService` — takes snapshots of categorical state per symbol; detects transitions on re-evaluate; sorts by significance (HIGH/MEDIUM/LOW)
+- Change types: rsi_zone, volume_band, trend_bias, macd_flip, vwap_cross
+- `GET /api/changes` — returns sorted ChangeEvent list vs last snapshot
+- `POST /api/changes/snapshot` — resets baseline to current state ("New Session")
+- Frontend `WhatChangedCard` in IntelligenceHome — replaces COMING SOON placeholder; loads on page load; New Session button; significance-colored event list
+- MockService `getChanges()` — 5 pre-canned realistic changes for demo mode
+- USER_GUIDE.md section 13 added
+- Roadmap strip in IntelligenceHome updated: M2/M3/M4 all marked ✓
 
-**Effort:** ~2 days
+**Validation status: IMPLEMENTED** — code exists and is wired. Not yet personally validated end-to-end.
+
+**To validate:**
+- [ ] Start app in demo mode (`npm run dev:all`)
+- [ ] Navigate to `/` (Intelligence Home)
+- [ ] "What Changed" card shows 5 pre-canned changes (INFY, SBIN, RELIANCE, TCS, ICICIBANK)
+- [ ] HIGH changes appear in red at top, MEDIUM in orange below
+- [ ] "New Session" button calls POST /api/changes/snapshot and reloads
+- [ ] Check endpoint directly: `GET /api/changes`
 
 ---
 

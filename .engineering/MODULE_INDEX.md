@@ -30,6 +30,7 @@
 | `backend/controllers/demo.controller.js` | GET/POST `/api/demo/mode` — runtime demo toggle |
 | `backend/controllers/backtest.controller.js` | POST `/api/backtest/run` — run backtest; GET `/api/backtest/strategies` — list strategies |
 | `backend/controllers/opportunities.controller.js` | GET `/api/opportunities` — ranked opportunity list; GET `/api/opportunities/:symbol/evidence` — per-stock evidence card |
+| `backend/controllers/changes.controller.js` | GET `/api/changes` — ChangeEvent list; POST `/api/changes/snapshot` — reset baseline |
 
 ### Services (business logic)
 
@@ -55,6 +56,7 @@
 | `backend/services/demo-seed.service.js` | Seeds MemoryStore with 25 trades + 5 strategies from `profiles/amol/trades.json` on demo startup |
 | `backend/services/opportunity.service.js` | Scores instruments across 5 factors (Trend 25%, Momentum 20%, Volume 20%, Rel. Strength 20%, VIX 15%); returns ranked list with per-factor reasons |
 | `backend/services/evidence.service.js` | Builds per-stock evidence card: 7 signal types (RSI, MACD, SMA, Bollinger, Volume, StochRSI, VWAP), plain-English summary, raw indicator values, key levels, sector |
+| `backend/services/change-detection.service.js` | Snapshots categorical market state per symbol; detects state transitions (rsi_zone, macd_flip, trend_bias, volume_band, vwap_cross); returns sorted ChangeEvents by significance |
 
 ### Models (MongoDB Schemas)
 
@@ -81,12 +83,14 @@
 | `backend/routes/demo.routes.js` | `/api/demo` |
 | `backend/routes/backtest.routes.js` | `/api/backtest` |
 | `backend/routes/opportunities.routes.js` | `/api/opportunities` |
+| `backend/routes/changes.routes.js` | `/api/changes` |
 
 ### Utils
 
 | File | Purpose |
 |------|---------|
 | `backend/utils/logger.js` | Winston logger; writes to `logs/combined.log` and `logs/error.log` |
+| `backend/utils/market-state.js` | Shared intelligence primitive: `computeMarketState(symbol, technicals, price)` → categorical state (rsiZone, volumeBand, trendBias, macdBias, vwapPosition). Used by ChangeDetectionService and future PortfolioIntelligence. |
 | `backend/utils/helpers.js` | `average(arr)` and other math helpers used by indicators |
 
 ## Frontend (`client/src/`)

@@ -23,6 +23,7 @@ const demoRoutes = require('./routes/demo.routes');
 const backtestRoutes = require('./routes/backtest.routes');
 const morningBriefRoutes = require('./routes/morning-brief.routes');
 const opportunitiesRoutes = require('./routes/opportunities.routes');
+const changesRoutes = require('./routes/changes.routes');
 
 // Import services
 const TickerService = require('./services/ticker.service');
@@ -36,6 +37,7 @@ const AlertService = require('./services/alert.service');
 const morningBriefService = require('./services/morning-brief.service');
 const opportunityService = require('./services/opportunity.service');
 const evidenceService = require('./services/evidence.service');
+const changeDetectionService = require('./services/change-detection.service');
 
 const app = express();
 const server = http.createServer(app);
@@ -140,6 +142,7 @@ app.use('/api/demo', demoRoutes);
 app.use('/api/backtest', backtestRoutes);
 app.use('/api/morning-brief', morningBriefRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
+app.use('/api/changes', changesRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
@@ -229,6 +232,13 @@ server.listen(PORT, () => {
     // Wire OpportunityService
     opportunityService.setScannerService(scannerService);
     evidenceService.setScannerService(scannerService);
+
+    // Wire ChangeDetectionService
+    changeDetectionService.setScannerService(scannerService);
+    changeDetectionService.setEvidenceService(evidenceService);
+    changeDetectionService.takeSnapshot().catch(err =>
+      logger.warn('[ChangeDetection] Initial snapshot failed:', err.message)
+    );
 
     // Morning market brief — 9:00 AM IST, Mon–Fri
     cron.schedule('0 9 * * 1-5', async () => {
