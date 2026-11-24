@@ -6,7 +6,7 @@ import {
 import {
   TrendingUp, TrendingDown, TrendingFlat, Search, Radar as RadarIcon,
   GridView, NotificationsActive, ArrowForward, LightbulbOutlined,
-  ChangeHistory, WbSunny, AccessTime, Circle
+  ChangeHistory, WbSunny, AccessTime, Refresh
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../../services/api.service';
@@ -50,7 +50,25 @@ function SectionLabel({ children }) {
 
 // ── Morning Brief card ──────────────────────────────────────────────────────
 
-function MorningBriefCard({ brief, loading }) {
+function IndexRow({ label, data }) {
+  if (!data) return null;
+  const up = data.changePct >= 0;
+  return (
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="caption" color="text.secondary">{label}</Typography>
+      <Box display="flex" gap={1} alignItems="center">
+        <Typography variant="caption" fontWeight="bold">
+          {data.price?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+        </Typography>
+        <Typography variant="caption" color={up ? 'success.light' : 'error.light'} fontWeight="bold">
+          {up ? '+' : ''}{data.changePct?.toFixed(2)}%
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+function MorningBriefCard({ brief, loading, onRetry }) {
   const navigate = useNavigate();
 
   if (loading) return (
@@ -71,14 +89,19 @@ function MorningBriefCard({ brief, loading }) {
           <WbSunny sx={{ color: 'warning.main', fontSize: '1.1rem' }} />
           <Typography variant="subtitle1" fontWeight="bold">Morning Brief</Typography>
         </Box>
-        <Alert severity="info" sx={{ py: 0.5, fontSize: '0.78rem' }}>
-          Could not load brief — backend may be starting up. Refresh in a moment.
+        <Alert severity="warning" sx={{ py: 0.5, mb: 1.5, fontSize: '0.78rem' }}>
+          Could not reach backend. Make sure the server is running on port 5000 (<code>npm run dev</code>) then click Retry.
         </Alert>
+        {onRetry && (
+          <Button size="small" startIcon={<Refresh />} onClick={onRetry} variant="outlined" sx={{ textTransform: 'none', fontSize: '0.78rem' }}>
+            Retry
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
 
-  const { regime, marketSentiment, breadth, sectorLeaders = [], sectorLaggers = [], noSetup, dataSource } = brief;
+  const { regime, marketSentiment, breadth, sectorLeaders = [], sectorLaggers = [], noSetup, dataSource, nifty, bankNifty, marketDataSource } = brief;
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -88,10 +111,26 @@ function MorningBriefCard({ brief, loading }) {
             <WbSunny sx={{ color: 'warning.main', fontSize: '1.1rem' }} />
             <Typography variant="subtitle1" fontWeight="bold">Morning Brief</Typography>
           </Box>
-          {dataSource === 'demo' && (
-            <Chip label="DEMO" size="small" sx={{ fontSize: '0.65rem', bgcolor: 'rgba(255,180,0,0.15)', color: 'warning.light' }} />
-          )}
+          <Tooltip title={marketDataSource ?? 'Live data'}>
+            <Chip
+              label={dataSource === 'demo' ? 'DEMO' : 'LIVE'}
+              size="small"
+              sx={{
+                fontSize: '0.65rem',
+                bgcolor: dataSource === 'demo' ? 'rgba(255,180,0,0.15)' : 'rgba(76,175,80,0.15)',
+                color: dataSource === 'demo' ? 'warning.light' : 'success.light',
+              }}
+            />
+          </Tooltip>
         </Box>
+
+        {/* NIFTY + BANK NIFTY */}
+        {(nifty || bankNifty) && (
+          <Box mb={1.5} sx={{ bgcolor: 'rgba(255,255,255,0.04)', borderRadius: 1, p: 1 }}>
+            {nifty    && <IndexRow label="NIFTY 50"    data={nifty} />}
+            {bankNifty && <IndexRow label="BANK NIFTY" data={bankNifty} />}
+          </Box>
+        )}
 
         {/* VIX + Regime */}
         <Box display="flex" alignItems="center" gap={1} mb={1.5} flexWrap="wrap">
@@ -313,13 +352,17 @@ export default function IntelligenceHome() {
   const navigate = useNavigate();
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
     apiService.get('/morning-brief')
       .then(r => setBrief(r.data?.data || null))
       .catch(() => setBrief(null))
       .finally(() => setLoading(false));
-  }, []);
+  }, [retryCount]);
+
+  const handleRetry = () => setRetryCount(c => c + 1);
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -345,7 +388,7 @@ export default function IntelligenceHome() {
 
         {/* Row 1: three main cards */}
         <Grid item xs={12} md={4}>
-          <MorningBriefCard brief={brief} loading={loading} />
+          <MorningBriefCard brief={brief} loading={loading} onRetry={handleRetry} />
         </Grid>
         <Grid item xs={12} md={4}>
           <OpportunitiesCard brief={brief} loading={loading} />

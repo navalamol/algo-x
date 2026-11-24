@@ -262,6 +262,7 @@ server.listen(PORT, () => {
     logger.info('🗺️  Sector heatmap active');
     logger.info('🔔 Alert service active');
     logger.info('🌅 Morning brief cron scheduled (9:00 AM IST, Mon–Fri)');
+    logger.info('📡 Free market data (Yahoo Finance) — NIFTY, BANK NIFTY, VIX, 7 sector indices');
     
   } catch (error) {
     logger.error('Error starting services:', error);
