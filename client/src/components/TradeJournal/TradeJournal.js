@@ -417,7 +417,14 @@ export default function TradeJournal() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight="bold">{trade.tradingSymbol}</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="body2" fontWeight="bold">{trade.tradingSymbol}</Typography>
+                        {trade.intelligence?.sourceFlow === 'opportunity' && (
+                          <Tooltip title={`AI Signal — Score: ${trade.intelligence.opportunityScore ?? '?'}/100 · ${trade.intelligence.matchedStrategy || 'Quick Trade'}`}>
+                            <Chip label="AI" size="small" sx={{ fontSize: '0.55rem', height: 14, bgcolor: 'rgba(66,165,245,0.18)', color: '#42a5f5', cursor: 'default', px: 0.3 }} />
+                          </Tooltip>
+                        )}
+                      </Box>
                       <Typography variant="caption" color="textSecondary">{trade.exchange}</Typography>
                     </TableCell>
                     <TableCell>

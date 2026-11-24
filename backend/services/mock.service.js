@@ -604,6 +604,27 @@ class MockService {
       symbolCount: 7,
     };
   }
+
+  quickPaperTrade(params) {
+    const { symbol, quantity, entryPrice, stopLoss, target, matchedStrategy, opportunityScore } = params;
+    const tradeId = `iq_demo_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    logger.info(`[MOCK MODE] Quick paper trade: ${quantity} ${symbol} @ ₹${entryPrice}`);
+    return {
+      tradeId,
+      symbol: (symbol || '').toUpperCase(),
+      quantity: parseInt(quantity, 10),
+      entryPrice: parseFloat(entryPrice),
+      stopLoss: stopLoss ? parseFloat(stopLoss) : null,
+      target: target ? parseFloat(target) : null,
+      status: 'OPEN',
+      intelligence: {
+        opportunityScore: opportunityScore || null,
+        matchedStrategy: matchedStrategy || 'Intelligence Quick Trade',
+        sourceFlow: 'opportunity',
+      },
+      message: `Paper trade opened: ${quantity} × ${(symbol || '').toUpperCase()} @ ₹${parseFloat(entryPrice).toFixed(2)}`,
+    };
+  }
 }
 
 module.exports = new MockService();

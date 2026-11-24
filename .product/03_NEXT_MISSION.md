@@ -184,13 +184,25 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 7 — Strategy / Paper Trading Integration
+## ✅ Mission 7 — Strategy / Paper Trading Integration — BUILT
 
 **Objective:** Connect the new intelligence layer with the existing execution layer.
 
 **Flow:** Opportunity → Evidence → Strategy → Paper Trade → Journal → Validation
 
 This completes the full product loop.
+
+**What was built:**
+- `PaperTradePanel` — 3rd tab on every OpportunityCard; uses evidence already loaded on tab 2 to match strategies client-side; pre-fills entry/SL/target from key levels; shows R:R strip; places trade via `POST /api/paper-trade/quick`
+- `backend/controllers/paper-trade.controller.js` — `quickTrade()` stores trade with `intelligence` metadata (opportunityScore, matchedStrategy, signals, sourceFlow: 'opportunity') in memoryStore (demo) or paperTradingService (live)
+- `backend/routes/paper-trade.routes.js` — `POST /api/paper-trade/quick`
+- Registered at `/api/paper-trade` in `server.js`
+- MockService `quickPaperTrade(params)` for demo mode
+- TradeJournal: **AI** chip on intelligence-sourced trades — tooltip shows score + matched strategy
+- USER_GUIDE section 16 added
+- 5 strategy matching rules evaluated client-side: RSI Oversold, VWAP Breakout, Support Bounce, Volume Spike, Mean Reversion
+
+**Validation status:** 🔲 PENDING — start server and run validation steps in USER_GUIDE §16
 
 ---
 

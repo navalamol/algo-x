@@ -25,6 +25,7 @@ const morningBriefRoutes = require('./routes/morning-brief.routes');
 const opportunitiesRoutes = require('./routes/opportunities.routes');
 const changesRoutes = require('./routes/changes.routes');
 const portfolioRoutes = require('./routes/portfolio.routes');
+const paperTradeRoutes = require('./routes/paper-trade.routes');
 
 // Import services
 const TickerService = require('./services/ticker.service');
@@ -146,6 +147,7 @@ app.use('/api/morning-brief', morningBriefRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/changes', changesRoutes);
 app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/paper-trade', paperTradeRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 

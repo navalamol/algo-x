@@ -824,3 +824,83 @@ Response: {
               totalPnL, totalPnLPct, topRisk, dataSource }
 }
 ```
+
+---
+
+## 16. Strategy / Paper Trading Integration (Mission 7)
+
+Connects the intelligence layer (Opportunities + Evidence) with the execution layer (Paper Trading + Journal). This completes the product loop: **Opportunity → Evidence → Strategy → Paper Trade → Journal**.
+
+### How to use
+
+1. Navigate to `/opportunities` (Intelligence → Opportunities)
+2. Click any opportunity card to expand it
+3. Click the **"Why This Stock"** tab to load the evidence (this is required before the Paper Trade tab can show strategy matches)
+4. Click the **"Paper Trade"** tab
+5. Review the matching strategy chips — these are strategies from the library whose conditions the current evidence satisfies
+6. Adjust quantity, entry price, stop-loss, and target as needed. Defaults are:
+   - **Entry**: current price from the opportunity score
+   - **Stop-loss**: calculated from the evidence's support level (or 3% below entry)
+   - **Target**: calculated from the evidence's resistance level (or 5% above entry)
+   - **Quantity**: auto-sized for 2% portfolio risk per trade (₹2,000 risk on ₹1L capital)
+7. The **Risk/Reward strip** shows risk amount, reward amount, R:R ratio, and the opportunity score
+8. Click **"Place Paper Trade"** — the trade is recorded as OPEN in your journal with an AI Signal tag
+
+### Intelligence badge in Journal
+
+Trades originating from an opportunity card carry an **AI** chip next to the symbol in the Trade Journal (`/journal`). Hovering over the chip shows:
+- Opportunity score at entry (e.g., Score: 78/100)
+- Matched strategy (e.g., RSI Oversold Reversal)
+
+### Strategy matching rules
+
+The Paper Trade tab evaluates the following conditions against the loaded evidence:
+
+| Strategy | Trigger |
+|----------|---------|
+| RSI Oversold Reversal | RSI < 35 |
+| VWAP Breakout | Price > VWAP AND Volume > 1.5× avg |
+| Support Bounce | Price within 2.5% of support AND RSI 30–55 |
+| Volume Spike Catcher | Volume > 2× average |
+| Mean Reversion | RSI > 68 (overbought) |
+
+### How to test in demo mode
+
+1. `npm run dev:all`
+2. Go to `/opportunities` — 7 instruments are ranked
+3. Expand **SBIN** (typically ranked with RSI Oversold signal)
+4. Click "Why This Stock" — evidence loads (RSI ~28, below SMA20)
+5. Click "Paper Trade" — RSI Oversold Reversal and/or Support Bounce should appear as matching strategies
+6. Adjust quantity, verify the R:R strip updates, click "Place Paper Trade"
+7. See confirmation screen, then go to `/journal` — SBIN appears with an **AI** chip
+
+### REST endpoint
+
+```
+POST /api/paper-trade/quick
+Body: {
+  symbol: "SBIN",
+  quantity: 10,
+  entryPrice: 625.50,
+  stopLoss: 612.00,
+  target: 652.00,
+  opportunityScore: 72,
+  matchedStrategy: "RSI Oversold Reversal",
+  signals: ["RSI Oversold", "Volume spike"]
+}
+Response: {
+  success: true,
+  data: {
+    tradeId: "iq_...",
+    symbol: "SBIN",
+    quantity: 10,
+    entryPrice: 625.50,
+    stopLoss: 612.00,
+    target: 652.00,
+    status: "OPEN",
+    intelligence: { opportunityScore: 72, matchedStrategy: "RSI Oversold Reversal", sourceFlow: "opportunity" },
+    message: "Paper trade opened: 10 × SBIN @ ₹625.50"
+  }
+}
+```
+

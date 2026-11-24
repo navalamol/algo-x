@@ -199,6 +199,15 @@ Multi-factor scoring engine. `OpportunityService` scores every instrument across
 
 Recharts `BarChart` above signals table showing last 14 days of journal P&L with green/red bars per day.
 
+### Strategy / Paper Trading Integration — Mission 7 (added Nov 2026)
+
+Completes the product loop: Opportunity → Evidence → Strategy → Paper Trade → Journal.
+
+- `backend/controllers/paper-trade.controller.js` + `routes/paper-trade.routes.js` — `POST /api/paper-trade/quick` creates a paper trade from an opportunity, stores an `intelligence` metadata block (opportunityScore, matchedStrategy, signals, sourceFlow)
+- `MockService.quickPaperTrade()` — demo-mode trade confirmation
+- Frontend: OpportunityCard gains a 3rd tab **"Paper Trade"** — PaperTradePanel evaluates 5 strategy matching rules client-side from already-loaded evidence; pre-fills entry/SL/target; R:R strip; places paper trade with one click
+- TradeJournal: **AI** chip on intelligence-sourced trades — tooltip shows opportunity score + matched strategy
+
 ---
 
 ## Known Limitations / Not Working
