@@ -80,6 +80,14 @@ The platform is fully functional in demo/paper trading mode. No real money execu
 3. Volume Breakout — Volume > 2x average
 4. VWAP Reclaim — Price > VWAP, buyer ratio > 1.0
 5. Weak Hands Exit — RSI > 70, buyer ratio < 0.7 (short/exit signal)
+6. StochRSI Oversold — StochRSI < 20, RSI < 45, buyer ratio > 1.0 *(Added Nov 2026)*
+7. MACD Bullish Cross — MACD histogram > 0, volume > 1.2x avg *(Added Nov 2026)*
+
+### Scanner Watch Mode (Added Nov 2026)
+
+Background watchdog: `startWatching(templateId)` triggers a 2-minute scan loop. New matches (stocks not seen last cycle) fire `scanner:new_match` Socket.io event and Telegram alert with full context (RSI, volume, VWAP, Radar score, VIX, sector). UI has watch toggle + new match feed per template.
+
+Routes: `POST /api/scanner/watch/:templateId`, `DELETE /api/scanner/watch/:templateId`, `GET /api/scanner/watching`
 
 ### Profiles
 
@@ -100,5 +108,9 @@ The app uses Kite Connect OAuth. The access token is saved to `.kite_token` afte
 - **Trade journal has no frontend** — `journal.json` exists in profiles but no UI to read/write it
 - **No group features** — leaderboard, shared watchlists not implemented
 - **Heatmap data freshness** — HeatmapService is mocked/estimated when real sector data isn't available
-- **VIX fetched from NSE HTML scrape** — may break if NSE changes page structure
 - **MockService data is static** — demo mode shows fixed instruments, not real NSE universe
+
+## Fixed (Nov 2026)
+
+- **VIX was stuck at 15.0** — NSE API blocked (403). Fixed: Kite Connect API primary source, NSE fallback. VIX now shows in AppBar as a live color-coded chip.
+- **Sector mapping was empty** — SECTOR_MAP was commented out in `sector-mapping.js`. Fixed: 50+ Nifty stocks across 10 sectors restored.
