@@ -4,11 +4,12 @@ import {
   Button, TextField, MenuItem, Select, FormControl,
   InputLabel, CircularProgress, Chip, Divider,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Accordion, AccordionSummary, AccordionDetails, Alert
+  Accordion, AccordionSummary, AccordionDetails, Alert, Tabs, Tab
 } from '@mui/material';
 import {
   PlayArrow, ExpandMore, TrendingUp, TrendingDown,
-  ShowChart, AccountBalance, Speed, Warning
+  ShowChart, AccountBalance, Speed, Warning,
+  CheckCircle, Science
 } from '@mui/icons-material';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -18,6 +19,12 @@ import {
 import apiService from '../../services/api.service';
 
 const SYMBOLS = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'WIPRO', 'LT', 'BAJFINANCE', 'ADANIENT'];
+
+const DATA_SOURCE_CONFIG = {
+  HISTORICAL_KITE:   { label: 'HISTORICAL DATA (Kite)',           color: 'success', icon: <CheckCircle fontSize="small" /> },
+  SYNTHETIC_DEMO:    { label: 'SYNTHETIC DATA — Demo Mode',       color: 'warning', icon: <Science fontSize="small" /> },
+  SYNTHETIC_FALLBACK:{ label: 'SYNTHETIC DATA — Kite unavailable',color: 'warning', icon: <Warning fontSize="small" /> },
+};
 
 function MetricCard({ title, value, sub, color = 'primary.main', icon }) {
   return (
@@ -36,6 +43,112 @@ function MetricCard({ title, value, sub, color = 'primary.main', icon }) {
   );
 }
 
+function MetricsRow({ metrics, capital }) {
+  if (!metrics) return null;
+  const isPositive = metrics.netPnL >= 0;
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={6} sm={4} md={2}>
+        <MetricCard title="Total Trades" value={metrics.totalTrades} icon={<ShowChart />} color="primary.main" />
+      </Grid>
+      <Grid item xs={6} sm={4} md={2}>
+        <MetricCard
+          title="Win Rate"
+          value={`${metrics.winRate}%`}
+          sub={`${metrics.wins}W / ${metrics.losses}L`}
+          icon={<TrendingUp />}
+          color={metrics.winRate >= 50 ? 'success.main' : 'warning.main'}
+        />
+      </Grid>
+      <Grid item xs={6} sm={4} md={2}>
+        <MetricCard
+          title="Net P&L"
+          value={`₹${metrics.netPnL.toLocaleString('en-IN')}`}
+          sub={`Avg ₹${((metrics.netPnL) / Math.max(1, metrics.totalTrades)).toFixed(0)} / trade`}
+          icon={isPositive ? <TrendingUp /> : <TrendingDown />}
+          color={isPositive ? 'success.main' : 'error.main'}
+        />
+      </Grid>
+      <Grid item xs={6} sm={4} md={2}>
+        <MetricCard
+          title="Profit Factor"
+          value={metrics.profitFactor}
+          sub={`Gross P ₹${metrics.grossProfit.toLocaleString('en-IN')}`}
+          icon={<AccountBalance />}
+          color={metrics.profitFactor >= 1.5 ? 'success.main' : metrics.profitFactor >= 1 ? 'warning.main' : 'error.main'}
+        />
+      </Grid>
+      <Grid item xs={6} sm={4} md={2}>
+        <MetricCard
+          title="Max Drawdown"
+          value={`${metrics.maxDrawdownPct}%`}
+          sub={`₹${metrics.maxDrawdown.toLocaleString('en-IN')}`}
+          icon={<Warning />}
+          color={metrics.maxDrawdownPct > 20 ? 'error.main' : metrics.maxDrawdownPct > 10 ? 'warning.main' : 'success.main'}
+        />
+      </Grid>
+      <Grid item xs={6} sm={4} md={2}>
+        <MetricCard
+          title="Sharpe (Approx)"
+          value={metrics.sharpeApprox}
+          sub="Annualized est."
+          icon={<Speed />}
+          color={metrics.sharpeApprox >= 1 ? 'success.main' : metrics.sharpeApprox >= 0 ? 'warning.main' : 'error.main'}
+        />
+      </Grid>
+    </Grid>
+  );
+}
+
+function TradeTable({ trades = [] }) {
+  if (!trades.length) return <Typography variant="body2" color="textSecondary" sx={{ p: 2 }}>No trades in this period.</Typography>;
+  return (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>#</TableCell>
+            <TableCell>Entry Date</TableCell>
+            <TableCell>Exit Date</TableCell>
+            <TableCell align="right">Entry ₹</TableCell>
+            <TableCell align="right">Exit ₹</TableCell>
+            <TableCell align="right">Qty</TableCell>
+            <TableCell>Exit Reason</TableCell>
+            <TableCell align="right">P&L</TableCell>
+            <TableCell align="right">RSI@Entry</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {trades.map((t, i) => (
+            <TableRow key={i} hover sx={{ borderLeft: `3px solid ${t.pnl >= 0 ? '#4caf50' : '#f44336'}` }}>
+              <TableCell>{i + 1}</TableCell>
+              <TableCell>{t.entryDate}</TableCell>
+              <TableCell>{t.exitDate}</TableCell>
+              <TableCell align="right">₹{t.entryPrice}</TableCell>
+              <TableCell align="right">₹{t.exitPrice}</TableCell>
+              <TableCell align="right">{t.qty}</TableCell>
+              <TableCell>
+                <Chip
+                  label={t.exitReason}
+                  size="small"
+                  color={t.exitReason === 'TAKE_PROFIT' ? 'success' : t.exitReason === 'STOP_LOSS' ? 'error' : 'default'}
+                  variant="outlined"
+                />
+              </TableCell>
+              <TableCell align="right">
+                <Typography variant="body2" fontWeight="bold" color={t.pnl >= 0 ? 'success.main' : 'error.main'}>
+                  {t.pnl >= 0 ? '+' : ''}₹{t.pnl}
+                </Typography>
+              </TableCell>
+              <TableCell align="right">{t.rsiAtEntry != null ? t.rsiAtEntry?.toFixed(1) : '—'}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
 export default function Backtest() {
   const [strategies, setStrategies] = useState([]);
   const [form, setForm] = useState({
@@ -45,10 +158,12 @@ export default function Backtest() {
     capital: 100000,
     slippage: 0.1,
     brokerage: 20,
+    outOfSamplePct: 20,
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [tradeTab, setTradeTab] = useState(0);
 
   useEffect(() => {
     apiService.get('/backtest/strategies')
@@ -61,6 +176,7 @@ export default function Backtest() {
     setError('');
     setLoading(true);
     setResult(null);
+    setTradeTab(0);
     try {
       const res = await apiService.post('/backtest/run', form);
       if (res.data?.success) {
@@ -75,32 +191,52 @@ export default function Backtest() {
     }
   };
 
-  const { metrics, trades = [], equity = [] } = result || {};
+  const { inSample, outOfSample, equity = [], splitDate, dataSource, capital: runCapital } = result || {};
 
-  // Monthly P&L from trade list
-  const monthlyPnL = useMemo(() => {
-    if (!trades.length) return [];
+  const inSampleMonthly = useMemo(() => {
+    if (!inSample?.trades?.length) return [];
     const map = {};
-    trades.forEach(t => {
+    inSample.trades.forEach(t => {
       const mo = t.exitDate?.slice(0, 7) || '?';
       map[mo] = (map[mo] || 0) + (t.pnl || 0);
     });
-    return Object.entries(map)
-      .sort(([a], [b]) => a.localeCompare(b))
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
       .map(([month, pnl]) => ({ month, pnl: Math.round(pnl * 100) / 100 }));
-  }, [trades]);
+  }, [inSample]);
 
-  const isPositive = metrics?.netPnL >= 0;
+  const srcConfig = DATA_SOURCE_CONFIG[dataSource] || DATA_SOURCE_CONFIG.SYNTHETIC_DEMO;
+  const isHistorical = dataSource === 'HISTORICAL_KITE';
+  const isPositive = (inSample?.metrics?.netPnL || 0) >= 0;
+
+  // Overfitting warning: OOS win rate significantly worse than IS
+  const overfitWarn = outOfSample && inSample &&
+    (inSample.metrics.winRate - outOfSample.metrics.winRate) > 15;
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Backtesting</Typography>
-      <Alert severity="warning" sx={{ mb: 2 }}>
-        <strong>SIMULATION / ILLUSTRATIVE ONLY</strong> — In demo mode all results are based on synthetically generated price data, not real NSE historical candles. Win rates, Sharpe ratios and drawdown figures shown here are <strong>not evidence of real performance</strong>. Real historical backtesting requires a live Kite API key (Mission 5).
-      </Alert>
+
+      {/* ── Data source banner — dynamic ── */}
+      {!result && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <strong>SIMULATION / ILLUSTRATIVE ONLY</strong> — In demo mode all results use synthetically generated price data, not real NSE historical candles. Win rates, Sharpe ratios and drawdown figures shown here are <strong>not evidence of real performance</strong>. A live Kite API key is required for real historical backtesting.
+        </Alert>
+      )}
+      {result && (
+        <Alert
+          severity={isHistorical ? 'success' : 'warning'}
+          icon={srcConfig.icon}
+          sx={{ mb: 2 }}
+        >
+          {isHistorical
+            ? <><strong>HISTORICAL BACKTEST</strong> — Results computed on real NSE daily candles from Kite Connect. In-sample window used for strategy evaluation; out-of-sample window is a held-out validation period.</>
+            : <><strong>SIMULATION / ILLUSTRATIVE ONLY</strong> — Results based on synthetic price data ({srcConfig.label}). These numbers do <strong>not</strong> represent real historical performance.</>
+          }
+        </Alert>
+      )}
+
       <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-        Simulate a strategy on historical data to evaluate performance before going live.
-        {' '}In demo mode, synthetic price data is generated automatically.
+        Simulate a strategy on historical data. The out-of-sample window is held out during strategy evaluation — a large gap between in-sample and out-of-sample metrics signals overfitting.
       </Typography>
 
       {/* ── Config Panel ── */}
@@ -140,7 +276,17 @@ export default function Backtest() {
               label="Days" type="number" size="small" fullWidth
               value={form.days}
               onChange={e => setForm(f => ({ ...f, days: parseInt(e.target.value) || 180 }))}
-              inputProps={{ min: 60, max: 730 }}
+              inputProps={{ min: 90, max: 730 }}
+            />
+          </Grid>
+
+          <Grid item xs={6} sm={4} md={1.5}>
+            <TextField
+              label="OOS %" type="number" size="small" fullWidth
+              value={form.outOfSamplePct}
+              onChange={e => setForm(f => ({ ...f, outOfSamplePct: parseInt(e.target.value) || 0 }))}
+              inputProps={{ min: 0, max: 40, step: 5 }}
+              helperText="Out-of-sample %"
             />
           </Grid>
 
@@ -169,10 +315,9 @@ export default function Backtest() {
             />
           </Grid>
 
-          <Grid item xs={12} sm={4} md={0.5}>
+          <Grid item xs={12} sm={4} md={1}>
             <Button
-              variant="contained"
-              fullWidth
+              variant="contained" fullWidth
               startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <PlayArrow />}
               onClick={handleRun}
               disabled={loading}
@@ -187,87 +332,73 @@ export default function Backtest() {
       </Paper>
 
       {/* ── Results ── */}
-      {result && metrics && (
+      {result && inSample && (
         <>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
+          <Box display="flex" alignItems="center" gap={1} mb={2} flexWrap="wrap">
             <Typography variant="h6">{result.strategyName} — {result.symbol}</Typography>
+            <Chip label={`${result.totalBars} bars`} size="small" variant="outlined" />
             <Chip
-              label={`${result.days} bars`}
-              size="small" variant="outlined"
+              label={srcConfig.label}
+              size="small"
+              color={isHistorical ? 'success' : 'warning'}
+              icon={srcConfig.icon}
             />
             <Chip
-              label={`${metrics.totalReturn >= 0 ? '+' : ''}${metrics.totalReturn}% return`}
+              label={`${inSample.metrics.totalReturn >= 0 ? '+' : ''}${inSample.metrics.totalReturn}% IS return`}
               size="small"
-              color={metrics.totalReturn >= 0 ? 'success' : 'error'}
+              color={inSample.metrics.totalReturn >= 0 ? 'success' : 'error'}
             />
           </Box>
 
-          {/* Metric cards */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={6} sm={4} md={2}>
-              <MetricCard
-                title="Total Trades"
-                value={metrics.totalTrades}
-                icon={<ShowChart />}
-                color="primary.main"
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={2}>
-              <MetricCard
-                title="Win Rate"
-                value={`${metrics.winRate}%`}
-                sub={`${metrics.wins}W / ${metrics.losses}L`}
-                icon={<TrendingUp />}
-                color={metrics.winRate >= 50 ? 'success.main' : 'warning.main'}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={2}>
-              <MetricCard
-                title="Net P&L"
-                value={`₹${metrics.netPnL.toLocaleString('en-IN')}`}
-                sub={`Avg ₹${((metrics.netPnL) / Math.max(1, metrics.totalTrades)).toFixed(0)} / trade`}
-                icon={isPositive ? <TrendingUp /> : <TrendingDown />}
-                color={isPositive ? 'success.main' : 'error.main'}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={2}>
-              <MetricCard
-                title="Profit Factor"
-                value={metrics.profitFactor}
-                sub={`Gross P ₹${metrics.grossProfit.toLocaleString('en-IN')}`}
-                icon={<AccountBalance />}
-                color={metrics.profitFactor >= 1.5 ? 'success.main' : metrics.profitFactor >= 1 ? 'warning.main' : 'error.main'}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={2}>
-              <MetricCard
-                title="Max Drawdown"
-                value={`${metrics.maxDrawdownPct}%`}
-                sub={`₹${metrics.maxDrawdown.toLocaleString('en-IN')}`}
-                icon={<Warning />}
-                color={metrics.maxDrawdownPct > 20 ? 'error.main' : metrics.maxDrawdownPct > 10 ? 'warning.main' : 'success.main'}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={2}>
-              <MetricCard
-                title="Sharpe (Approx)"
-                value={metrics.sharpeApprox}
-                sub="Annualized est."
-                icon={<Speed />}
-                color={metrics.sharpeApprox >= 1 ? 'success.main' : metrics.sharpeApprox >= 0 ? 'warning.main' : 'error.main'}
-              />
-            </Grid>
-          </Grid>
+          {overfitWarn && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              <strong>Overfitting warning:</strong> In-sample win rate ({inSample.metrics.winRate}%) is {(inSample.metrics.winRate - outOfSample.metrics.winRate).toFixed(1)}pp higher than out-of-sample ({outOfSample.metrics.winRate}%). This strategy may be overfit to historical data.
+            </Alert>
+          )}
 
-          {/* Equity Curve */}
+          {/* ── In-Sample Metrics ── */}
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+              <Typography variant="subtitle1" fontWeight="bold">In-Sample Training</Typography>
+              <Chip label={`${inSample.fromDate} → ${inSample.toDate}`} size="small" sx={{ bgcolor: 'primary.dark' }} />
+              <Chip label={`${inSample.bars} bars`} size="small" variant="outlined" />
+            </Box>
+            <MetricsRow metrics={inSample.metrics} capital={runCapital} />
+          </Paper>
+
+          {/* ── Out-of-Sample Metrics ── */}
+          {outOfSample ? (
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                <Typography variant="subtitle1" fontWeight="bold">Out-of-Sample Validation</Typography>
+                <Chip label={`${outOfSample.fromDate} → ${outOfSample.toDate}`} size="small" sx={{ bgcolor: 'warning.dark' }} />
+                <Chip label={`${outOfSample.bars} bars`} size="small" variant="outlined" />
+                <Typography variant="caption" color="textSecondary">held-out period — not used in strategy evaluation</Typography>
+              </Box>
+              <MetricsRow metrics={outOfSample.metrics} capital={runCapital} />
+            </Paper>
+          ) : (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Out-of-sample period too short for a full evaluation (need 30+ bars). Increase days or reduce OOS %.
+            </Alert>
+          )}
+
+          {/* ── Equity Curve ── */}
           <Paper sx={{ p: 2, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>Equity Curve</Typography>
+            <Typography variant="h6" gutterBottom>
+              Equity Curve
+              {splitDate && (
+                <Typography component="span" variant="caption" color="textSecondary" sx={{ ml: 1 }}>
+                  — dashed line marks out-of-sample start ({splitDate})
+                </Typography>
+              )}
+            </Typography>
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={equity} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={isPositive ? '#4caf50' : '#f44336'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={isPositive ? '#4caf50' : '#f44336'} stopOpacity={0} />
+                  <linearGradient id="eqGradIS" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#2196f3" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#2196f3" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -275,24 +406,31 @@ export default function Backtest() {
                 <YAxis tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10, fill: '#888' }} />
                 <ReTooltip
                   contentStyle={{ background: '#1e1e1e', border: '1px solid #333', borderRadius: 6 }}
-                  formatter={(v) => [`₹${v.toLocaleString('en-IN')}`, 'Portfolio Value']}
+                  formatter={(v, _n, props) => [
+                    `₹${v.toLocaleString('en-IN')}`,
+                    props.payload?.period === 'out-of-sample' ? 'OOS Equity' : 'IS Equity',
+                  ]}
                 />
-                <ReferenceLine y={form.capital} stroke="#666" strokeDasharray="4 4" label={{ value: 'Start', fill: '#888', fontSize: 10 }} />
+                <ReferenceLine y={runCapital} stroke="#666" strokeDasharray="4 4"
+                  label={{ value: 'Start', fill: '#888', fontSize: 10 }} />
+                {splitDate && (
+                  <ReferenceLine x={splitDate} stroke="#ff9800" strokeDasharray="6 3"
+                    label={{ value: 'OOS', fill: '#ff9800', fontSize: 10, position: 'insideTopRight' }} />
+                )}
                 <Area
                   type="monotone" dataKey="value"
-                  stroke={isPositive ? '#4caf50' : '#f44336'}
-                  fill="url(#eqGrad)" strokeWidth={2}
+                  stroke="#2196f3" fill="url(#eqGradIS)" strokeWidth={2}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </Paper>
 
-          {/* Monthly P&L */}
-          {monthlyPnL.length > 0 && (
+          {/* ── Monthly P&L (in-sample) ── */}
+          {inSampleMonthly.length > 0 && (
             <Paper sx={{ p: 2, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Monthly P&L</Typography>
+              <Typography variant="h6" gutterBottom>Monthly P&L — In-Sample</Typography>
               <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={monthlyPnL} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                <BarChart data={inSampleMonthly} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#888' }} />
                   <YAxis tickFormatter={v => `₹${v}`} tick={{ fontSize: 10, fill: '#888' }} />
@@ -302,7 +440,7 @@ export default function Backtest() {
                   />
                   <ReferenceLine y={0} stroke="#555" />
                   <Bar dataKey="pnl" radius={[3, 3, 0, 0]}>
-                    {monthlyPnL.map((d, i) => (
+                    {inSampleMonthly.map((d, i) => (
                       <Cell key={i} fill={d.pnl >= 0 ? '#4caf50' : '#f44336'} />
                     ))}
                   </Bar>
@@ -311,62 +449,27 @@ export default function Backtest() {
             </Paper>
           )}
 
-          {/* Trade List */}
-          <Accordion defaultExpanded={trades.length <= 20}>
+          {/* ── Trade Log ── */}
+          <Accordion defaultExpanded={false}>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="h6">Trade Log ({trades.length} trades)</Typography>
+              <Typography variant="h6">
+                Trade Log — {outOfSample ? 'In-Sample' : ''} {inSample.trades.length} trades
+                {outOfSample ? ` / Out-of-Sample ${outOfSample.trades.length} trades` : ''}
+              </Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ p: 0 }}>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>#</TableCell>
-                      <TableCell>Entry Date</TableCell>
-                      <TableCell>Exit Date</TableCell>
-                      <TableCell align="right">Entry ₹</TableCell>
-                      <TableCell align="right">Exit ₹</TableCell>
-                      <TableCell align="right">Qty</TableCell>
-                      <TableCell>Exit Reason</TableCell>
-                      <TableCell align="right">P&L</TableCell>
-                      <TableCell align="right">RSI@Entry</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {trades.map((t, i) => (
-                      <TableRow key={i} hover
-                        sx={{ borderLeft: `3px solid ${t.pnl >= 0 ? '#4caf50' : '#f44336'}` }}
-                      >
-                        <TableCell>{i + 1}</TableCell>
-                        <TableCell>{t.entryDate}</TableCell>
-                        <TableCell>{t.exitDate}</TableCell>
-                        <TableCell align="right">₹{t.entryPrice}</TableCell>
-                        <TableCell align="right">₹{t.exitPrice}</TableCell>
-                        <TableCell align="right">{t.qty}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={t.exitReason}
-                            size="small"
-                            color={t.exitReason === 'TAKE_PROFIT' ? 'success' : t.exitReason === 'STOP_LOSS' ? 'error' : 'default'}
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography
-                            variant="body2" fontWeight="bold"
-                            color={t.pnl >= 0 ? 'success.main' : 'error.main'}
-                          >
-                            {t.pnl >= 0 ? '+' : ''}₹{t.pnl}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          {t.rsiAtEntry !== null ? t.rsiAtEntry?.toFixed(1) : '—'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              {outOfSample ? (
+                <>
+                  <Tabs value={tradeTab} onChange={(_, v) => setTradeTab(v)} sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
+                    <Tab label={`In-Sample (${inSample.trades.length})`} />
+                    <Tab label={`Out-of-Sample (${outOfSample.trades.length})`} />
+                  </Tabs>
+                  {tradeTab === 0 && <TradeTable trades={inSample.trades} />}
+                  {tradeTab === 1 && <TradeTable trades={outOfSample.trades} />}
+                </>
+              ) : (
+                <TradeTable trades={inSample.trades} />
+              )}
             </AccordionDetails>
           </Accordion>
         </>
@@ -377,7 +480,7 @@ export default function Backtest() {
           <ShowChart sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
           <Typography variant="h6" color="textSecondary">Configure and run a backtest to see results</Typography>
           <Typography variant="body2" color="textDisabled" sx={{ mt: 1 }}>
-            Select a strategy, choose a symbol and date range, then click Run.
+            Set OOS % to 0 for a full-window backtest, or 10–30% to hold out a validation period.
           </Typography>
         </Paper>
       )}

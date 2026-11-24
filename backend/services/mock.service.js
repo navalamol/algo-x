@@ -432,6 +432,55 @@ class MockService {
     };
   }
 
+  /**
+   * Returns deterministic OHLCV daily candles for backtesting in demo mode.
+   * Each symbol has a scenario bias (direction + volatility) so backtest results
+   * are consistent across runs — no random drift.
+   */
+  getHistoricalOHLCV(symbol, days) {
+    const scenarios = {
+      SBIN:      { startPrice: 625.50,  drift: -0.0025, vol: 0.008,  volumeBase: 350000 },
+      INFY:      { startPrice: 1456.75, drift:  0.0035, vol: 0.007,  volumeBase: 400000 },
+      TCS:       { startPrice: 3780.30, drift:  0.0010, vol: 0.007,  volumeBase: 280000 },
+      RELIANCE:  { startPrice: 2456.80, drift:  0.0020, vol: 0.009,  volumeBase: 500000 },
+      HDFCBANK:  { startPrice: 1687.25, drift:  0.0015, vol: 0.007,  volumeBase: 450000 },
+      ICICIBANK: { startPrice: 1089.90, drift:  0.0030, vol: 0.010,  volumeBase: 600000 },
+      WIPRO:     { startPrice: 445.60,  drift:  0.0040, vol: 0.008,  volumeBase: 300000 },
+    };
+    const s = scenarios[symbol.toUpperCase()] || { startPrice: 1000, drift: 0.001, vol: 0.009, volumeBase: 300000 };
+
+    // LCG seeded on symbol name for full determinism
+    let seed = symbol.toUpperCase().split('').reduce((a, c) => a + c.charCodeAt(0), 17);
+    const rng = () => {
+      seed = ((seed * 1664525 + 1013904223) | 0) >>> 0;
+      return seed / 0xffffffff;
+    };
+
+    const data = [];
+    let price = s.startPrice;
+    const now = Date.now();
+    for (let i = days; i >= 0; i--) {
+      const d = new Date(now - i * 86400000);
+      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      const dayChange = s.drift + (rng() - 0.5) * s.vol * 2;
+      const open  = price;
+      const close = Math.max(10, price * (1 + dayChange));
+      const high  = Math.max(open, close) * (1 + rng() * 0.004);
+      const low   = Math.min(open, close) * (1 - rng() * 0.004);
+      const volNoise = Math.floor((rng() - 0.5) * s.volumeBase * 0.5);
+      data.push({
+        date:   d.toISOString().slice(0, 10),
+        open:   Math.round(open  * 100) / 100,
+        high:   Math.round(high  * 100) / 100,
+        low:    Math.round(low   * 100) / 100,
+        close:  Math.round(close * 100) / 100,
+        volume: Math.max(50000, s.volumeBase + volNoise),
+      });
+      price = close;
+    }
+    return data;
+  }
+
   getChanges() {
     const now = new Date().toISOString();
     return {

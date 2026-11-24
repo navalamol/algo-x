@@ -1,4 +1,4 @@
-# User Guide — Kite Algo Trading Platform
+# User Guide — Algo-X Market Intelligence
 
 *Version: Nov 2026 | Paper trading only — no real money executes*
 
@@ -694,3 +694,81 @@ POST /api/changes/snapshot  → { snapshotAt, symbolCount }   (resets baseline)
 }
 ```
 
+
+
+---
+
+## 14. Backtesting — Historical vs Synthetic Data (Mission 5)
+
+### What changed in Mission 5
+
+The backtest engine now distinguishes clearly between **real historical data** and **synthetic demo data**, and adds an **in-sample / out-of-sample validation split** to catch overfitting.
+
+### Data sources
+
+| Mode | Data Source | Label shown |
+|------|-------------|-------------|
+| Demo mode (no Kite key) | Deterministic synthetic OHLCV per symbol | `SYNTHETIC DATA — Demo Mode` (orange banner) |
+| Live mode (Kite key present) | Real NSE daily candles via `kite.getHistoricalData()` | `HISTORICAL DATA (Kite)` (green banner) |
+| Live mode — Kite error/offline | Falls back to synthetic | `SYNTHETIC DATA — Kite unavailable` (orange banner) |
+
+### In-sample / Out-of-sample split
+
+The **OOS %** field (default 20%) holds back the final portion of candles as a validation window:
+
+- **In-Sample Training** — the strategy is evaluated here. Metrics here are "what this strategy did on training data."
+- **Out-of-Sample Validation** — a held-out period never used in strategy evaluation. Metrics here are "how the strategy actually generalised."
+
+If in-sample win rate is 65% but out-of-sample is 35%, the strategy is overfit. The UI shows a red overfitting warning when the gap exceeds 15 percentage points.
+
+Set OOS % to 0 to skip the split and run a full-window backtest.
+
+### How to test in demo mode
+
+1. Start the app: `npm run dev:all`
+2. Navigate to `/backtest`
+3. Select any strategy (e.g., "RSI Oversold Reversal")
+4. Select a symbol (e.g., INFY or SBIN)
+5. Leave OOS % at 20 and click **Run**
+6. The orange `SYNTHETIC DATA — Demo Mode` banner should appear
+7. Two metric panels show: "In-Sample Training" and "Out-of-Sample Validation"
+8. The equity curve shows a vertical orange line marking the OOS split date
+9. The Trade Log accordion has two tabs: In-Sample and Out-of-Sample
+
+### How to test with a live Kite key
+
+1. Set `KITE_API_KEY`, `KITE_API_SECRET` in `.env` and authenticate at `http://localhost:5000/auth.html`
+2. Run a backtest — the green `HISTORICAL DATA (Kite)` banner appears
+3. Results are computed on real NSE daily candles
+
+### REST endpoint
+
+```
+POST /api/backtest/run
+Body: {
+  strategyId: "rsi_oversold",
+  symbol: "INFY",
+  days: 180,
+  capital: 100000,
+  slippage: 0.1,
+  brokerage: 20,
+  outOfSamplePct: 20
+}
+
+Response:
+{
+  strategyName, symbol, dataSource,
+  totalBars, splitDate, capital,
+  inSample:    { fromDate, toDate, bars, metrics, trades },
+  outOfSample: { fromDate, toDate, bars, metrics, trades } | null,
+  equity: [{ date, value, period }]
+}
+```
+
+### dataSource values
+
+| Value | Meaning |
+|-------|---------|
+| `HISTORICAL_KITE` | Real NSE candles from Kite Connect |
+| `SYNTHETIC_DEMO` | Deterministic synthetic candles (demo mode) |
+| `SYNTHETIC_FALLBACK` | Synthetic candles used because Kite failed |

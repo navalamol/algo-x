@@ -189,4 +189,18 @@ function computeMetrics(trades, initialCapital, equity) {
   };
 }
 
-module.exports = { runBacktest, generateOHLCV, computeMetrics };
+/**
+ * Split a sorted candle array into in-sample and out-of-sample windows.
+ * outOfSamplePct: 0–50, default 20. 0 = no split (inSample = full array).
+ */
+function splitCandles(candles, outOfSamplePct = 20) {
+  const pct = Math.max(0, Math.min(50, outOfSamplePct)) / 100;
+  if (pct === 0) return { inSample: candles, outOfSample: [] };
+  const splitIdx = Math.floor(candles.length * (1 - pct));
+  return {
+    inSample: candles.slice(0, splitIdx),
+    outOfSample: candles.slice(splitIdx),
+  };
+}
+
+module.exports = { runBacktest, generateOHLCV, computeMetrics, splitCandles };

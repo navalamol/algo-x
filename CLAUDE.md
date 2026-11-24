@@ -93,11 +93,11 @@ Old Dashboard moved from `/` to `/dashboard`. Items with `soon: true` render as 
 | Mission 0 | Product reorientation — Algo-X branding, nav restructure, simulation disclaimers | ✅ Done |
 | Mission 1 | Morning Brief — Yahoo Finance, REST endpoint, Telegram upgrade, Intelligence Home | ✅ Done |
 | Mission 2 | Opportunity Ranking Engine — multi-factor score, explainable breakdown | ✅ Done |
-| Mission 3 | Evidence Layer — Why This Stock evidence cards with signals, indicators, key levels | ✅ Done |
-| Mission 4 | What Changed — portfolio diff since last session | Planned |
-| Mission 5 | Trade Journal UI | Planned |
-| Mission 6 | Group Dashboard / leaderboard | Planned |
-| Mission 7 | Real money execution | Planned |
+| Mission 3 | Evidence Layer — Why This Stock evidence cards with signals, indicators, key levels | 🔧 Implemented |
+| Mission 4 | What Changed — categorical state-transition detection, WhatChangedCard | 🔧 Implemented |
+| Mission 5 | Real Historical Backtesting — Kite data, IS/OOS split, overfitting warning | 🔧 Implemented |
+| Mission 6 | Portfolio Intelligence — holding health, sector concentration, correlations | Planned |
+| Mission 7 | Strategy/Paper Trading integration with intelligence layer | Planned |
 
 ## ⚠️ Integrity Warning — Backtesting & Win Rates
 

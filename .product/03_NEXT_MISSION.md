@@ -139,18 +139,32 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 5 — Real Historical Backtesting
+## 🔧 Mission 5 — Real Historical Backtesting — IMPLEMENTED (not yet personally validated)
 
-**Objective:** Every claimed strategy performance can be traced to real historical data.
+**What was built:**
+- `KiteService.getHistoricalData()` wired properly (uses rate-limited KiteService, not raw kite object)
+- `splitCandles(candles, outOfSamplePct)` in `backtest.service.js` — in-sample / out-of-sample split
+- `mockService.getHistoricalOHLCV(symbol, days)` — deterministic LCG-seeded OHLCV for demo mode
+- Response: `dataSource` (HISTORICAL_KITE / SYNTHETIC_DEMO / SYNTHETIC_FALLBACK), `inSample`, `outOfSample`, combined `equity` with `period` field
+- Frontend: dynamic banner, two metric panels, equity curve split reference line, tabbed trade log, overfitting warning
+- USER_GUIDE section 14 added
 
-**What to build:**
-- When Kite API key is live: use `kite.getHistoricalData()` (already partially wired)
-- In-sample / out-of-sample split
-- Clear label distinction: `HISTORICAL BACKTEST` vs `SIMULATION / ILLUSTRATIVE ONLY`
-- Remove or gate synthetic-data metrics that look like real evidence
-- Walk-forward testing (stretch goal)
+**Validation status: IMPLEMENTED** — code exists and is wired. Not yet personally validated end-to-end.
 
-**Effort:** ~3 days core, ~1 week with walk-forward
+**To validate (demo mode):**
+- [ ] Start app in demo mode (`npm run dev:all`)
+- [ ] Navigate to `/backtest`, select any strategy + symbol, run
+- [ ] Orange `SYNTHETIC DATA — Demo Mode` banner appears
+- [ ] "In-Sample Training" and "Out-of-Sample Validation" metric panels show
+- [ ] Equity curve has orange vertical OOS split line
+- [ ] Trade Log accordion has two tabs (In-Sample / Out-of-Sample)
+- [ ] Overfitting warning fires if IS win rate minus OOS win rate > 15pp
+
+**To validate (live Kite mode):**
+- [ ] Authenticate at `http://localhost:5000/auth.html`
+- [ ] Run backtest on INFY or RELIANCE
+- [ ] Green `HISTORICAL DATA (Kite)` banner appears
+- [ ] Metrics reflect real NSE candle data
 
 ---
 

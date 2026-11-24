@@ -145,6 +145,19 @@ Categorical state-transition engine answering "what changed enough that I should
 - Frontend: `WhatChangedCard` in IntelligenceHome — loads on page load, New Session button, significance-colored list
 - 90-second server-side cache; full demo mode support via MockService.getChanges()
 
+### Real Historical Backtesting — Mission 5 (added Nov 2026)
+
+Backtest engine now fully distinguishes real NSE data from synthetic demo data. Added in-sample / out-of-sample split with overfitting detection.
+
+- `backtest.service.js` — added `splitCandles(candles, outOfSamplePct)` utility
+- `backtest.controller.js` — rewritten: uses `KiteService.getAllInstruments()` + `KiteService.getHistoricalData()` in live mode; `mockService.getHistoricalOHLCV()` in demo mode; runs backtest on inSample and outOfSample windows separately
+- `mock.service.js` — `getHistoricalOHLCV(symbol, days)`: deterministic LCG-seeded OHLCV candles per symbol (consistent runs, scenario-biased drift)
+- Response now includes `dataSource: HISTORICAL_KITE | SYNTHETIC_DEMO | SYNTHETIC_FALLBACK`, plus `inSample` and `outOfSample` metric blocks, and combined `equity` array with `period` field
+- Frontend: dynamic banner (`HISTORICAL DATA (Kite)` green vs `SYNTHETIC DATA` orange), two metric panels (In-Sample Training / Out-of-Sample Validation), split date reference line on equity curve, tabbed trade log, overfitting warning when IS−OOS win rate gap > 15pp
+- USER_GUIDE section 14 added
+
+---
+
 ### Evidence Cards — Why This Stock (`/opportunities` → expand → "Why This Stock", added Nov 2026)
 
 Per-stock evidence layer answering "why does this stock rank highly?" without opening external tools.
