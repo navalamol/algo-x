@@ -56,6 +56,17 @@ The backend is a single Express server (`backend/server.js`) that initializes 7 
 - Indicators live in `backend/services/indicators.service.js` — add new ones there
 - Scan templates live in `backend/config/scan-templates.js` — array of condition objects
 
+## Feature Shipping Checklist (Rule Added Nov 2026)
+
+Every new feature **must ship with**:
+
+1. **MockService extension** — if the feature uses market data, prices, volumes, or depth, add scenario-biased data to `backend/services/mock.service.js` so it fires correctly in demo mode without a real Kite API key.
+2. **User guide entry** — add a section to `docs/USER_GUIDE.md` covering: what the feature does, how to use it, what to test in demo mode, and any config needed.
+
+This rule ensures the app is always fully testable on market holidays and without Kite credentials.
+
+---
+
 ## .plans/ Folder Convention
 
 Strategic review plans are saved to `.plans/` for reference. They are **not** read by default AI context. Only read them when doing a strategic review. Copy interesting plans there after approval.

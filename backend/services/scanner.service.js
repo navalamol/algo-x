@@ -36,9 +36,22 @@ class ScannerService {
   start() {
     if (this.isRunning) return;
 
-    if (this.demoMode && this.watchSymbols.length === 0) {
+    if (this.demoMode) {
       const instruments = mockService.getAllInstruments();
-      this.watchSymbols = instruments.map(i => `${i.exchange}:${i.tradingsymbol}`);
+
+      if (this.watchSymbols.length === 0) {
+        this.watchSymbols = instruments.map(i => `${i.exchange}:${i.tradingsymbol}`);
+      }
+
+      // Pre-seed price history so indicators are computable on the first scan
+      // rather than returning null while history accumulates over live ticks.
+      instruments.forEach(inst => {
+        const history = mockService.getPriceHistory(inst.tradingsymbol);
+        if (history.length > 0) {
+          this.priceHistory.set(inst.tradingsymbol, [...history]);
+        }
+      });
+      logger.info('🔍 Scanner: pre-seeded demo price histories for', instruments.length, 'instruments');
     }
 
     this.isRunning = true;

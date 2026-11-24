@@ -1,5 +1,5 @@
 # Kite Algo Trading — Full Codebase Reference
-*Last synced: Nov 2026 | Branch: main | Last commit: cc0ac30*
+*Last synced: 2026-11-24 | commit `0e53fcd` | branch `main`*
 
 ---
 
