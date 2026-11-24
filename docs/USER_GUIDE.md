@@ -460,3 +460,98 @@ GET /api/morning-brief
 |-------|---------|
 | `live` | Real Kite Connect data |
 | `demo` | Synthetic mock data (no API key configured) |
+
+---
+
+## Opportunity Ranking Engine (Mission 2)
+
+**Route:** `/opportunities`  
+**API:** `GET /api/opportunities`
+
+### What it does
+The Opportunity Ranking Engine scores every instrument in the universe across five independent factors and returns them ranked from most to least interesting. Each score component includes a plain-English reason so you understand **why** a stock ranks where it does.
+
+Scores are always traceable — no "black box" rankings.
+
+### Scoring factors (total 100 pts)
+
+| Factor | Weight | What it measures |
+|--------|--------|-----------------|
+| **Trend** | 25 pts | Price vs SMA20 (13 pts) + SMA20 vs SMA50 direction (12 pts) |
+| **Momentum / RSI** | 20 pts | RSI position: 50–65 is ideal momentum entry; 25–35 is oversold reversal; >80 or <15 score low |
+| **Volume** | 20 pts | Current volume vs 20-bar average: 3×+ = 20 pts, below average = 2 pts |
+| **Relative Strength vs NIFTY** | 20 pts | Stock's total change vs NIFTY's change over the same window |
+| **VIX Regime** | 15 pts | VIX 12–15 = 15 pts (optimal); VIX >35 = 0 pts (avoid) |
+
+### Interpreting scores
+| Score | Label | What to do |
+|-------|-------|-----------|
+| 75–100 | Strong | High-conviction setup — worth deeper research |
+| 60–74 | Moderate | Interesting, review the breakdown before acting |
+| 45–59 | Weak | Only 1–2 factors aligned — caution |
+| 0–44 | Low | Multiple factors against it — skip |
+
+### How to use
+1. Navigate to **Opportunities** in the sidebar (Intelligence section).
+2. Cards are sorted highest-score-first. Each card shows: symbol, price, score ring (0–100), and a mini factor bar row.
+3. Click any card to expand the full 5-factor breakdown with per-factor score, max points, and reason text.
+4. Use the **Refresh** button to recompute scores (results are cached for 1 minute server-side).
+
+### Reading the breakdown panel
+
+Each expanded card shows five factor rows:
+- **Score / Max** — how many of the available points this stock earned for that factor
+- **Reason** — the specific value that drove the score (e.g. "RSI 54.2 — ideal momentum zone (50–65)")
+- A progress bar showing the fill percentage
+
+**Missing data** is shown explicitly — if a factor cannot be computed (e.g. fewer than 50 price bars means no SMA50), the reason says so and a neutral score is applied rather than hiding the gap.
+
+### Demo mode
+In demo mode (no Kite API key), scores are computed from the same scenario price histories used by the Scanner. Each of the 7 instruments is biased toward a different setup:
+
+| Symbol | Scenario | Expected high score |
+|--------|---------|-------------------|
+| HDFCBANK | VWAP Reclaim — steady rise | Trend + Momentum |
+| RELIANCE | MACD Bullish Cross — recovery after decline | Trend + Momentum |
+| INFY | Momentum Burst — strong uptrend | Trend + Rel. Strength |
+| ICICIBANK | Volume Breakout — flat price, high volume | Volume |
+| WIPRO | Overbought — extended uptrend | Trend (but Momentum penalised) |
+| SBIN | Oversold Reversal — falling price | Momentum reversal zone |
+| TCS | StochRSI Oversold — sharp recent decline | Momentum (early oversold) |
+
+This gives a diverse, realistic mix every time. Refresh to see updated scores as the demo price histories evolve.
+
+### REST response structure
+```json
+GET /api/opportunities
+{
+  "success": true,
+  "data": {
+    "opportunities": [
+      {
+        "symbol": "HDFCBANK",
+        "name": "HDFC Bank Limited",
+        "totalScore": 75,
+        "price": 1687.25,
+        "dataPoints": 50,
+        "breakdown": {
+          "trend":       { "score": 25, "max": 25, "reason": "...", "data": { "sma20": 1680, "sma50": 1668, "pctFromSma20": 1.8 } },
+          "momentum":    { "score": 20, "max": 20, "reason": "RSI 54.2 — ideal momentum zone (50–65)", "data": { "rsi": 54.2 } },
+          "volume":      { "score": 8,  "max": 20, "reason": "Volume 1.2× avg — slightly elevated", "data": { "volumeVsAvg": 1.2 } },
+          "relStrength": { "score": 10, "max": 20, "reason": "+0.5% vs NIFTY — inline with market", "data": { "stockChangePct": 1.4, "niftyChangePct": 0.9 } },
+          "vixRegime":   { "score": 12, "max": 15, "reason": "VIX 16.4 — normal volatility", "data": { "vix": 16.4 } }
+        }
+      }
+    ],
+    "computedAt": "2026-11-24T09:00:00.000Z",
+    "dataSource": "demo",
+    "vix": 16.4
+  }
+}
+```
+
+### dataSource field
+| Value | Meaning |
+|-------|---------|
+| `live` | Scores computed from live scanner price histories |
+| `demo` | Scores computed from scenario price histories (mock service) |

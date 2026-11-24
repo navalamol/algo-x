@@ -133,6 +133,19 @@ Paper / Live / All tabs. Stat cards (total, win rate, net P&L, open positions). 
 
 Bar-by-bar simulator on historical or synthetic OHLCV data. Computes RSI, SMA20/50, MACD, Bollinger Bands, VWAP per bar. Checks strategy entry conditions; executes stop-loss / take-profit. Returns 6 metrics (win rate, profit factor, max drawdown, Sharpe approx), equity curve, monthly P&L bars, and full trade log. Runs entirely on synthetic data in demo mode — no Kite API key needed.
 
+### Opportunity Ranking Engine (`/opportunities`, added Nov 2026)
+
+Multi-factor scoring engine. `OpportunityService` scores every instrument across five factors (Trend 25%, Momentum/RSI 20%, Volume 20%, Relative Strength vs NIFTY 20%, VIX Regime 15%). Each factor returns a numeric score and a plain-English reason string — no black-box rankings.
+
+- `GET /api/opportunities` → ranked list (top 10) with full breakdown
+- In demo mode: scores computed directly from scenario price histories (consistent with Scanner scenarios)
+- In live mode: scores from scanner's `priceHistory` map; NIFTY change from Yahoo Finance
+- 1-minute server-side cache; refresh button in UI
+- UI: expandable cards with score ring (CircularProgress), mini factor bars, and full breakdown panel on expand
+- `soon` flag removed from Opportunities nav item — route is live at `/opportunities`
+
+---
+
 ### Demo Infrastructure (overhauled Nov 2026)
 
 - Runtime demo toggle chip in AppBar — switches mock/live without editing `.env` or restarting

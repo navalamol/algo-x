@@ -49,6 +49,7 @@ import SectorHeatmap from './components/Heatmap/SectorHeatmap';
 import AlertManager from './components/AlertManager/AlertManager';
 import TradeJournal from './components/TradeJournal/TradeJournal';
 import Backtest from './components/Backtest/Backtest';
+import OpportunityRanking from './components/Opportunities/OpportunityRanking';
 import socketService from './services/socket.service';
 import apiService from './services/api.service';
 
@@ -139,7 +140,7 @@ function App() {
     {
       header: 'Intelligence',
       items: [
-        { text: 'Opportunities', icon: <LightbulbOutlined />, path: '/', soon: true },
+        { text: 'Opportunities', icon: <LightbulbOutlined />, path: '/opportunities' },
         { text: 'What Changed', icon: <ChangeHistory />, path: '/', soon: true },
       ]
     },
@@ -294,6 +295,7 @@ function App() {
                 <Route path="/alerts" element={<AlertManager />} />
                 <Route path="/journal" element={<TradeJournal />} />
                 <Route path="/backtest" element={<Backtest />} />
+                <Route path="/opportunities" element={<OpportunityRanking />} />
               </Routes>
             </Container>
           </Box>

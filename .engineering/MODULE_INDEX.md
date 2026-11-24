@@ -29,6 +29,7 @@
 | `backend/controllers/alert.controller.js` | Create/list/delete alerts, trigger test |
 | `backend/controllers/demo.controller.js` | GET/POST `/api/demo/mode` — runtime demo toggle |
 | `backend/controllers/backtest.controller.js` | POST `/api/backtest/run` — run backtest; GET `/api/backtest/strategies` — list strategies |
+| `backend/controllers/opportunities.controller.js` | GET `/api/opportunities` — ranked opportunity list with score breakdown |
 
 ### Services (business logic)
 
@@ -52,6 +53,7 @@
 | `backend/services/memory-store.service.js` | In-memory ring buffer for price/volume/indicator history per symbol; used by strategy and scanner services |
 | `backend/services/backtest.service.js` | Bar-by-bar backtest simulator: `generateOHLCV()`, `runBacktest()`, `computeMetrics()` |
 | `backend/services/demo-seed.service.js` | Seeds MemoryStore with 25 trades + 5 strategies from `profiles/amol/trades.json` on demo startup |
+| `backend/services/opportunity.service.js` | Scores instruments across 5 factors (Trend 25%, Momentum 20%, Volume 20%, Rel. Strength 20%, VIX 15%); returns ranked list with per-factor reasons |
 
 ### Models (MongoDB Schemas)
 
@@ -77,6 +79,7 @@
 | `backend/routes/alert.routes.js` | `/api/alerts` |
 | `backend/routes/demo.routes.js` | `/api/demo` |
 | `backend/routes/backtest.routes.js` | `/api/backtest` |
+| `backend/routes/opportunities.routes.js` | `/api/opportunities` |
 
 ### Utils
 
@@ -108,6 +111,7 @@
 | `components/TelegramSettings/TelegramSettings.js` | Configure bot token, chat ID, notification preferences, test |
 | `components/TradeJournal/TradeJournal.js` | Paper/Live/All tabs; stat cards; equity curve; strategy table; filterable trade log; CSV export |
 | `components/Backtest/Backtest.js` | Backtest config (strategy, symbol, days, capital); equity curve; monthly P&L bars; 6 metric cards; trade log accordion |
+| `components/Opportunities/OpportunityRanking.js` | Ranked opportunity cards with score ring, mini factor bars, expandable 5-factor breakdown panel |
 
 ## Profile Data (`profiles/`)
 

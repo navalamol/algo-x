@@ -72,23 +72,21 @@ Do not build new trading features until Mission 0–3 are validated.
 
 ---
 
-## Mission 2 — Opportunity Ranking Engine
+## ✅ Mission 2 — Opportunity Ranking Engine (DONE)
 
 **Objective:** Surface 5–10 stocks worth researching, ranked by multi-factor score.
 
 **User value:** Replaces manual scanning of hundreds of stocks.
 
-**What to build:**
+**What was built:**
 - `OpportunityService` — scores stocks across: Trend (25%), Momentum/RSI (20%), Volume (20%), Relative Strength vs NIFTY (20%), VIX regime (15%)
-- Scores are explainable: every point traceable to a reason
-- Missing data shown explicitly, not hidden
+- Scores are explainable: every point traceable to a reason string
+- Missing data shown explicitly (neutral score + "insufficient history" reason)
 - `GET /api/opportunities` → ranked list with score breakdown
-
-**Frontend:** OPPORTUNITIES page — ranked cards with score breakdown visible on expand
-
-**MockService + USER_GUIDE required**
-
-**Effort:** ~3 days
+- Frontend `/opportunities` — expandable cards with score ring, mini factor bars, full breakdown panel
+- Demo mode computes real scores from scenario price histories (not hardcoded)
+- `soon: true` removed from nav — route is live
+- USER_GUIDE section added
 
 ---
 

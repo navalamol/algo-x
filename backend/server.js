@@ -22,6 +22,7 @@ const alertRoutes = require('./routes/alert.routes');
 const demoRoutes = require('./routes/demo.routes');
 const backtestRoutes = require('./routes/backtest.routes');
 const morningBriefRoutes = require('./routes/morning-brief.routes');
+const opportunitiesRoutes = require('./routes/opportunities.routes');
 
 // Import services
 const TickerService = require('./services/ticker.service');
@@ -33,6 +34,7 @@ const ScannerService = require('./services/scanner.service');
 const heatmapService = require('./services/heatmap.service');
 const AlertService = require('./services/alert.service');
 const morningBriefService = require('./services/morning-brief.service');
+const opportunityService = require('./services/opportunity.service');
 
 const app = express();
 const server = http.createServer(app);
@@ -136,6 +138,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/demo', demoRoutes);
 app.use('/api/backtest', backtestRoutes);
 app.use('/api/morning-brief', morningBriefRoutes);
+app.use('/api/opportunities', opportunitiesRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
@@ -222,6 +225,9 @@ server.listen(PORT, () => {
     morningBriefService.setHeatmapService(heatmapService);
     morningBriefService.setScannerService(scannerService);
 
+    // Wire OpportunityService
+    opportunityService.setScannerService(scannerService);
+
     // Morning market brief — 9:00 AM IST, Mon–Fri
     cron.schedule('0 9 * * 1-5', async () => {
       logger.info('🌅 Running morning brief...');
@@ -262,6 +268,7 @@ server.listen(PORT, () => {
     logger.info('🗺️  Sector heatmap active');
     logger.info('🔔 Alert service active');
     logger.info('🌅 Morning brief cron scheduled (9:00 AM IST, Mon–Fri)');
+    logger.info('💡 Opportunity ranking engine active');
     logger.info('📡 Free market data (Yahoo Finance) — NIFTY, BANK NIFTY, VIX, 7 sector indices');
     
   } catch (error) {
