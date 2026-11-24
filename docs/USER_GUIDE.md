@@ -412,3 +412,51 @@ When a trade fires, the backend log shows:
 ### Demo mode
 The mock service exposes `getOHLCHistory(symbol)` which derives deterministic OHLC from the scenario price histories, so ATR can be computed without a real Kite connection. Strategy evaluation is skipped in demo mode (no live ticker feed), so ATR stop-loss activates once a live API key is configured.
 
+
+---
+
+## Morning Brief (Mission 1)
+
+### What it does
+The Morning Brief is the first screen you should check each trading day. It synthesises India VIX, sector performance and scanner results into a single concise view — targetted at under 60 seconds to scan.
+
+**Available from:** `GET /api/morning-brief` and the **Home** page (the `/` route after the Mission 0 navigation update)
+
+### What the brief shows
+| Section | What it tells you |
+|---------|------------------|
+| **India VIX + Regime** | Current volatility level (VERY_LOW / LOW / NORMAL / ELEVATED / HIGH / EXTREME) with a plain-language recommendation |
+| **VIX Trend** | Whether VIX is RISING, FALLING or STABLE vs recent history |
+| **Market Sentiment** | BULLISH / BEARISH / MIXED based on how many sectors are advancing vs declining |
+| **Sector Leaders** | Top 3 advancing sectors with change % |
+| **Sector Weakness** | Top 2 declining sectors |
+| **Top Setups** | Stocks matching multiple scanner templates — sorted by number of matching templates (more templates = more conviction) |
+| **Scan Summary** | Per-template match count with top symbols |
+
+### Telegram delivery
+The brief is sent automatically at **9:00 AM IST, Monday–Friday** to every profile that has Telegram configured.
+
+To receive it:
+1. Go to **Settings → Telegram** and configure your bot token + chat ID
+2. The brief fires automatically at market open
+
+### Demo mode
+In demo mode (no Kite API key), the brief returns realistic synthetic data — 7 sector leaders/laggers, 5 top setups from the scenario-biased instruments, and a NORMAL VIX regime. This allows full testing on market holidays.
+
+### No strong setup
+If no scanner templates return matches, the brief shows:
+> No strong setups today — consider waiting.
+
+This is intentional. The system is not optimised to always produce a signal. Signal quality matters more than signal quantity.
+
+### REST endpoint
+```
+GET /api/morning-brief
+→ { success: true, data: { generatedAt, date, regime, marketSentiment, breadth, sectorLeaders, sectorLaggers, topOpportunities, scanSummary, noSetup, dataSource } }
+```
+
+### dataSource field
+| Value | Meaning |
+|-------|---------|
+| `live` | Real Kite Connect data |
+| `demo` | Synthetic mock data (no API key configured) |

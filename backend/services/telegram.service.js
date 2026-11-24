@@ -295,30 +295,74 @@ ${sectorLine}⏰ ${time}
    * Send morning market brief
    */
   async sendMorningBrief(chatId, brief) {
-    const { vix, vixCondition, scanSummary, date } = brief;
-    if (!scanSummary || scanSummary.length === 0) return null;
+    const {
+      date, regime, marketSentiment, breadth,
+      sectorLeaders = [], sectorLaggers = [],
+      topOpportunities = [], scanSummary = [], noSetup,
+      // legacy fallback fields
+      vix, vixCondition
+    } = brief;
 
-    const lines = scanSummary.map(s =>
-      `• <b>${s.templateName}</b>: ${s.count} match${s.count !== 1 ? 'es' : ''}` +
-      (s.topSymbols.length > 0 ? ` (${s.topSymbols.join(', ')})` : '')
-    ).join('\n');
+    // Support both old and new brief shapes
+    const vixVal = regime?.vix ?? vix;
+    const vixCond = regime?.condition ?? vixCondition;
+    const briefDate = date || new Date().toLocaleDateString('en-IN');
 
-    const vixEmoji = vixCondition === 'NORMAL' || vixCondition === 'LOW' ? '🟢'
-      : vixCondition === 'ELEVATED' ? '🟡' : '🔴';
+    const vixEmoji = vixCond === 'NORMAL' || vixCond === 'LOW' || vixCond === 'VERY_LOW' ? '🟢'
+      : vixCond === 'ELEVATED' ? '🟡' : '🔴';
 
-    const message = `
-🌅 <b>Morning Market Brief</b>
-${date}
+    const sentimentEmoji = marketSentiment === 'BULLISH' ? '📈'
+      : marketSentiment === 'BEARISH' ? '📉' : '↔️';
 
-${vixEmoji} India VIX: <b>${vix}</b> (${vixCondition})
+    // Sector leaders block
+    const leadersBlock = sectorLeaders.length > 0
+      ? '📊 <b>Sector Leaders:</b>\n' + sectorLeaders.map(s =>
+          `  ${s.changePct > 0 ? '▲' : '▼'} ${s.sector}: <b>${s.changePct > 0 ? '+' : ''}${s.changePct?.toFixed(2)}%</b>`
+        ).join('\n')
+      : '';
 
-<b>Scan Summary:</b>
-${lines}
+    const laggersBlock = sectorLaggers.length > 0
+      ? '⚠️ <b>Sector Weakness:</b>\n' + sectorLaggers.map(s =>
+          `  ▼ ${s.sector}: <b>${s.changePct?.toFixed(2)}%</b>`
+        ).join('\n')
+      : '';
 
-<i>Watch mode active — you'll be notified when new setups appear.</i>
-    `.trim();
+    // Top opportunities block
+    const oppsBlock = topOpportunities.length > 0
+      ? '💡 <b>Top Setups:</b>\n' + topOpportunities.map(o =>
+          `  • <b>${o.symbol}</b> — ${o.templates.join(' · ')}` +
+          (o.rsi != null ? ` | RSI ${o.rsi?.toFixed(0)}` : '') +
+          (o.volumeVsAvg != null ? ` | Vol ${o.volumeVsAvg?.toFixed(1)}×` : '')
+        ).join('\n')
+      : noSetup
+        ? '⏸ No strong setups today — consider waiting.'
+        : '';
 
-    return this.sendMessage(chatId, message);
+    // Scan counts block
+    const scanBlock = scanSummary.length > 0
+      ? '<b>Scan Summary:</b>\n' + scanSummary
+          .filter(s => s.count > 0)
+          .map(s => `  • ${s.templateName}: ${s.count} match${s.count !== 1 ? 'es' : ''}`)
+          .join('\n')
+      : '';
+
+    const breadthLine = breadth
+      ? `Breadth: ${breadth.advancing}↑ ${breadth.declining}↓ of ${breadth.total} sectors`
+      : '';
+
+    const sections = [
+      `🌅 <b>Algo-X Morning Brief</b>\n${briefDate}`,
+      `${vixEmoji} India VIX: <b>${vixVal?.toFixed(1) ?? '—'}</b> (${vixCond ?? '—'})` +
+        (regime?.recommendation ? `\n<i>${regime.recommendation}</i>` : ''),
+      marketSentiment ? `${sentimentEmoji} Market: <b>${marketSentiment}</b>${breadthLine ? '  ' + breadthLine : ''}` : '',
+      leadersBlock,
+      laggersBlock,
+      oppsBlock,
+      scanBlock,
+      '<i>Watch mode active — you\'ll be notified when new setups appear.</i>',
+    ].filter(Boolean).join('\n\n');
+
+    return this.sendMessage(chatId, sections.trim());
   }
 
   /**

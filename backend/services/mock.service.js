@@ -388,6 +388,49 @@ class MockService {
     };
     return segment ? margins[segment] : margins;
   }
+  getMorningBrief() {
+    const now = new Date();
+    return {
+      generatedAt: now.toISOString(),
+      date: now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+      dataSource: 'demo',
+      regime: {
+        vix: 16.4,
+        condition: 'NORMAL',
+        description: 'Normal volatility — Typical market',
+        recommendation: 'Standard risk management. Momentum setups have a reasonable edge.',
+        trend: 'STABLE',
+      },
+      marketSentiment: 'BULLISH',
+      breadth: { advancing: 7, declining: 4, total: 11 },
+      sectorLeaders: [
+        { sector: 'Realty',  changePct: 2.30 },
+        { sector: 'Metals',  changePct: 1.75 },
+        { sector: 'IT',      changePct: 1.42 },
+      ],
+      sectorLaggers: [
+        { sector: 'Pharma',  changePct: -1.05 },
+        { sector: 'Banking', changePct: -0.63 },
+      ],
+      topOpportunities: [
+        { symbol: 'INFY',      templates: ['Momentum Burst', 'VWAP Reclaim'],    rsi: 63.2, volumeVsAvg: 1.9, radarScore: 72 },
+        { symbol: 'RELIANCE',  templates: ['MACD Bullish Cross'],                rsi: 55.8, volumeVsAvg: 1.4, radarScore: 61 },
+        { symbol: 'HDFCBANK',  templates: ['VWAP Reclaim'],                      rsi: 51.2, volumeVsAvg: 1.2, radarScore: 58 },
+        { symbol: 'TCS',       templates: ['StochRSI Oversold'],                 rsi: 42.1, volumeVsAvg: 1.1, radarScore: 49 },
+        { symbol: 'SBIN',      templates: ['Oversold Reversal Candidate'],       rsi: 31.4, volumeVsAvg: 1.6, radarScore: 65 },
+      ],
+      scanSummary: [
+        { templateId: 'momentum_burst',           templateName: 'Momentum Burst',            count: 1, topSymbols: ['INFY'] },
+        { templateId: 'oversold_reversal',         templateName: 'Oversold Reversal',         count: 1, topSymbols: ['SBIN'] },
+        { templateId: 'volume_breakout',           templateName: 'Volume Breakout',           count: 1, topSymbols: ['ICICIBANK'] },
+        { templateId: 'vwap_reclaim',              templateName: 'VWAP Reclaim',              count: 2, topSymbols: ['INFY', 'HDFCBANK'] },
+        { templateId: 'macd_bullish_cross',        templateName: 'MACD Bullish Cross',        count: 1, topSymbols: ['RELIANCE'] },
+        { templateId: 'stochrsi_oversold',         templateName: 'StochRSI Oversold',        count: 1, topSymbols: ['TCS'] },
+        { templateId: 'weak_hands_exit',           templateName: 'Weak Hands Exit',           count: 1, topSymbols: ['WIPRO'] },
+      ],
+      noSetup: false,
+    };
+  }
 }
 
 module.exports = new MockService();

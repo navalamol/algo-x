@@ -21,6 +21,7 @@ const heatmapRoutes = require('./routes/heatmap.routes');
 const alertRoutes = require('./routes/alert.routes');
 const demoRoutes = require('./routes/demo.routes');
 const backtestRoutes = require('./routes/backtest.routes');
+const morningBriefRoutes = require('./routes/morning-brief.routes');
 
 // Import services
 const TickerService = require('./services/ticker.service');
@@ -31,6 +32,7 @@ const RadarService = require('./services/radar.service');
 const ScannerService = require('./services/scanner.service');
 const heatmapService = require('./services/heatmap.service');
 const AlertService = require('./services/alert.service');
+const morningBriefService = require('./services/morning-brief.service');
 
 const app = express();
 const server = http.createServer(app);
@@ -133,6 +135,7 @@ app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/demo', demoRoutes);
 app.use('/api/backtest', backtestRoutes);
+app.use('/api/morning-brief', morningBriefRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
@@ -214,37 +217,24 @@ server.listen(PORT, () => {
     // Wire up cross-service dependencies
     scannerService.setRadarService(radarService);
 
+    // Wire MorningBriefService with its dependencies
+    morningBriefService.setVixService(vixService);
+    morningBriefService.setHeatmapService(heatmapService);
+    morningBriefService.setScannerService(scannerService);
+
     // Morning market brief — 9:00 AM IST, Mon–Fri
     cron.schedule('0 9 * * 1-5', async () => {
       logger.info('🌅 Running morning brief...');
       try {
         const telegramService = require('./services/telegram.service');
-        const vixService = require('./services/vix.service');
         const fs = require('fs');
         const path = require('path');
-        const scanTemplates = require('./config/scan-templates');
 
-        const scanSummary = [];
-        for (const template of scanTemplates) {
-          try {
-            const results = await scannerService.runScan(template.id);
-            scanSummary.push({
-              templateName: template.name,
-              count: results.length,
-              topSymbols: results.slice(0, 3).map(r => r.symbol)
-            });
-          } catch (e) { /* skip failed templates */ }
-        }
+        const brief = await morningBriefService.assembleBrief();
 
         const profilesDir = path.join(__dirname, '../profiles');
         if (!fs.existsSync(profilesDir)) return;
         const profiles = fs.readdirSync(profilesDir);
-        const brief = {
-          vix: vixService.getCurrentVIX(),
-          vixCondition: vixService.getMarketCondition().condition,
-          scanSummary,
-          date: new Date().toLocaleDateString('en-IN')
-        };
 
         for (const name of profiles) {
           const cfgPath = path.join(profilesDir, name, 'config.json');

@@ -1,86 +1,324 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Grid, Card, CardContent, Typography, Chip, Divider,
-  Button, Alert, Skeleton, Paper, List, ListItem, ListItemText,
-  ListItemIcon, Tooltip
+  Button, Alert, Skeleton, Paper, Tooltip
 } from '@mui/material';
 import {
   TrendingUp, TrendingDown, TrendingFlat, Search, Radar as RadarIcon,
-  GridView, NotificationsActive, ArrowForward, Circle,
-  LightbulbOutlined, ChangeHistory, WbSunny, AccessTime
+  GridView, NotificationsActive, ArrowForward, LightbulbOutlined,
+  ChangeHistory, WbSunny, AccessTime, Circle
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../../services/api.service';
 
-function RegimeChip({ vix }) {
-  if (!vix) return null;
-  const { label, color } =
-    vix >= 25 ? { label: 'HIGH FEAR', color: 'error' } :
-    vix >= 20 ? { label: 'ELEVATED', color: 'warning' } :
-    vix >= 15 ? { label: 'NORMAL', color: 'primary' } :
-                { label: 'CALM', color: 'success' };
+// ── small shared atoms ──────────────────────────────────────────────────────
+
+function RegimePill({ condition }) {
+  if (!condition) return null;
+  const map = {
+    VERY_LOW:  { label: 'Very Low', color: 'success' },
+    LOW:       { label: 'Low',      color: 'success' },
+    NORMAL:    { label: 'Normal',   color: 'primary' },
+    ELEVATED:  { label: 'Elevated', color: 'warning' },
+    HIGH:      { label: 'High',     color: 'error'   },
+    EXTREME:   { label: 'Extreme',  color: 'error'   },
+  };
+  const { label, color } = map[condition] || { label: condition, color: 'default' };
   return <Chip label={label} color={color} size="small" variant="outlined" sx={{ fontWeight: 'bold', fontSize: '0.7rem' }} />;
 }
 
-function SectionHeader({ children }) {
+function SentimentPill({ sentiment }) {
+  if (!sentiment) return null;
+  const map = {
+    BULLISH: { label: '▲ Bullish', color: 'success' },
+    BEARISH: { label: '▼ Bearish', color: 'error' },
+    MIXED:   { label: '↔ Mixed',  color: 'warning' },
+    NEUTRAL: { label: '— Neutral', color: 'default' },
+  };
+  const { label, color } = map[sentiment] || { label: sentiment, color: 'default' };
+  return <Chip label={label} color={color} size="small" sx={{ fontWeight: 'bold', fontSize: '0.7rem' }} />;
+}
+
+function SectionLabel({ children }) {
   return (
-    <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1, letterSpacing: 1.5, fontSize: '0.68rem' }}>
+    <Typography variant="overline" color="text.secondary"
+      sx={{ display: 'block', mb: 1, letterSpacing: 1.5, fontSize: '0.68rem' }}>
       {children}
     </Typography>
   );
 }
 
-function MissionCard({ title, subtitle, icon, action, actionLabel, status, children }) {
+// ── Morning Brief card ──────────────────────────────────────────────────────
+
+function MorningBriefCard({ brief, loading }) {
   const navigate = useNavigate();
+
+  if (loading) return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Skeleton height={28} width="60%" sx={{ mb: 1 }} />
+        <Skeleton height={22} sx={{ mb: 0.5 }} />
+        <Skeleton height={22} width="80%" sx={{ mb: 0.5 }} />
+        <Skeleton height={22} width="70%" />
+      </CardContent>
+    </Card>
+  );
+
+  if (!brief) return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+          <WbSunny sx={{ color: 'warning.main', fontSize: '1.1rem' }} />
+          <Typography variant="subtitle1" fontWeight="bold">Morning Brief</Typography>
+        </Box>
+        <Alert severity="info" sx={{ py: 0.5, fontSize: '0.78rem' }}>
+          Could not load brief — backend may be starting up. Refresh in a moment.
+        </Alert>
+      </CardContent>
+    </Card>
+  );
+
+  const { regime, marketSentiment, breadth, sectorLeaders = [], sectorLaggers = [], noSetup, dataSource } = brief;
+
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ flexGrow: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
           <Box display="flex" alignItems="center" gap={1}>
-            <Box sx={{ color: 'primary.main', display: 'flex' }}>{icon}</Box>
-            <Box>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>{title}</Typography>
-              {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
+            <WbSunny sx={{ color: 'warning.main', fontSize: '1.1rem' }} />
+            <Typography variant="subtitle1" fontWeight="bold">Morning Brief</Typography>
+          </Box>
+          {dataSource === 'demo' && (
+            <Chip label="DEMO" size="small" sx={{ fontSize: '0.65rem', bgcolor: 'rgba(255,180,0,0.15)', color: 'warning.light' }} />
+          )}
+        </Box>
+
+        {/* VIX + Regime */}
+        <Box display="flex" alignItems="center" gap={1} mb={1.5} flexWrap="wrap">
+          <Typography variant="body2" color="text.secondary">India VIX</Typography>
+          <Typography variant="body1" fontWeight="bold">{regime?.vix?.toFixed(1) ?? '—'}</Typography>
+          <RegimePill condition={regime?.condition} />
+          {regime?.trend && regime.trend !== 'STABLE' && (
+            <Chip
+              label={regime.trend === 'RISING' ? 'VIX ↑' : 'VIX ↓'}
+              size="small"
+              color={regime.trend === 'RISING' ? 'warning' : 'success'}
+              variant="outlined"
+              sx={{ fontSize: '0.65rem' }}
+            />
+          )}
+        </Box>
+
+        {regime?.recommendation && (
+          <Typography variant="caption" color="text.secondary" display="block" mb={1.5}
+            sx={{ fontStyle: 'italic', borderLeft: '2px solid', borderColor: 'divider', pl: 1 }}>
+            {regime.recommendation}
+          </Typography>
+        )}
+
+        {/* Sentiment + Breadth */}
+        <Box display="flex" alignItems="center" gap={1.5} mb={1.5} flexWrap="wrap">
+          <SentimentPill sentiment={marketSentiment} />
+          {breadth && (
+            <Typography variant="caption" color="text.secondary">
+              {breadth.advancing}↑ {breadth.declining}↓ of {breadth.total} sectors
+            </Typography>
+          )}
+        </Box>
+
+        {/* Sector Leaders */}
+        {sectorLeaders.length > 0 && (
+          <Box mb={1}>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+              Sector Leaders
+            </Typography>
+            <Box display="flex" gap={0.75} flexWrap="wrap">
+              {sectorLeaders.map(s => (
+                <Chip
+                  key={s.sector}
+                  label={`${s.sector} +${s.changePct?.toFixed(1)}%`}
+                  size="small"
+                  sx={{ bgcolor: 'rgba(76,175,80,0.15)', color: 'success.light', fontSize: '0.7rem' }}
+                />
+              ))}
             </Box>
           </Box>
-          {status && <Chip label={status} size="small" sx={{ fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.08)' }} />}
-        </Box>
-        {children}
+        )}
+
+        {/* Sector Laggers */}
+        {sectorLaggers.length > 0 && (
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+              Weakness
+            </Typography>
+            <Box display="flex" gap={0.75} flexWrap="wrap">
+              {sectorLaggers.map(s => (
+                <Chip
+                  key={s.sector}
+                  label={`${s.sector} ${s.changePct?.toFixed(1)}%`}
+                  size="small"
+                  sx={{ bgcolor: 'rgba(244,67,54,0.15)', color: 'error.light', fontSize: '0.7rem' }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {noSetup && (
+          <Alert severity="info" sx={{ mt: 1.5, py: 0.5, fontSize: '0.78rem' }}>
+            No strong setups today — consider waiting.
+          </Alert>
+        )}
       </CardContent>
-      {action && (
-        <Box sx={{ px: 2, pb: 1.5 }}>
-          <Button size="small" endIcon={<ArrowForward />} onClick={() => navigate(action)} sx={{ textTransform: 'none', fontSize: '0.78rem' }}>
-            {actionLabel}
-          </Button>
-        </Box>
-      )}
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <Button size="small" endIcon={<ArrowForward />} onClick={() => navigate('/scanner')} sx={{ textTransform: 'none', fontSize: '0.78rem' }}>
+          Run Scanner
+        </Button>
+      </Box>
     </Card>
   );
 }
 
+// ── Top Opportunities card ──────────────────────────────────────────────────
+
+function OpportunitiesCard({ brief, loading }) {
+  const navigate = useNavigate();
+
+  if (loading) return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Skeleton height={28} width="60%" sx={{ mb: 1 }} />
+        {[1, 2, 3].map(i => <Skeleton key={i} height={36} sx={{ mb: 0.5 }} />)}
+      </CardContent>
+    </Card>
+  );
+
+  const topOpps = brief?.topOpportunities ?? [];
+  const noSetup = brief?.noSetup;
+
+  return (
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+          <LightbulbOutlined sx={{ color: 'primary.main', fontSize: '1.1rem' }} />
+          <Typography variant="subtitle1" fontWeight="bold">Top Setups</Typography>
+          {!brief && <Chip label="COMING SOON" size="small" sx={{ fontSize: '0.65rem', opacity: 0.6 }} />}
+        </Box>
+
+        {!brief ? (
+          <Alert severity="info" sx={{ py: 0.5, mb: 1, fontSize: '0.78rem' }}>
+            Opportunity Ranking (Mission 2) will score stocks across Momentum, Volume, Relative Strength and Sector — every point explainable.
+          </Alert>
+        ) : noSetup || topOpps.length === 0 ? (
+          <Alert severity="info" sx={{ py: 0.5, fontSize: '0.78rem' }}>
+            No high-conviction setups today. Recommendation: WAIT / MONITOR.
+          </Alert>
+        ) : (
+          topOpps.map((o, i) => (
+            <Box key={o.symbol} mb={i < topOpps.length - 1 ? 1 : 0}>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="body2" fontWeight="bold">{o.symbol}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {o.templates.join(' · ')}
+                  </Typography>
+                </Box>
+                <Box display="flex" gap={0.5} alignItems="center" flexShrink={0} ml={1}>
+                  {o.rsi != null && (
+                    <Chip label={`RSI ${o.rsi.toFixed(0)}`} size="small"
+                      sx={{ fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.08)' }} />
+                  )}
+                  {o.volumeVsAvg != null && (
+                    <Chip label={`Vol ${o.volumeVsAvg.toFixed(1)}×`} size="small"
+                      sx={{ fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.08)' }} />
+                  )}
+                </Box>
+              </Box>
+              {i < topOpps.length - 1 && <Divider sx={{ mt: 1 }} />}
+            </Box>
+          ))
+        )}
+      </CardContent>
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <Button size="small" endIcon={<ArrowForward />} onClick={() => navigate('/scanner')} sx={{ textTransform: 'none', fontSize: '0.78rem' }}>
+          Full Scanner
+        </Button>
+      </Box>
+    </Card>
+  );
+}
+
+// ── Scan Summary card ───────────────────────────────────────────────────────
+
+function ScanSummaryCard({ brief, loading }) {
+  const navigate = useNavigate();
+
+  if (loading) return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Skeleton height={28} width="60%" sx={{ mb: 1 }} />
+        {[1, 2, 3].map(i => <Skeleton key={i} height={28} sx={{ mb: 0.5 }} />)}
+      </CardContent>
+    </Card>
+  );
+
+  const scanSummary = (brief?.scanSummary ?? []).filter(s => s.count > 0);
+
+  return (
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+          <Search sx={{ color: 'primary.main', fontSize: '1.1rem' }} />
+          <Typography variant="subtitle1" fontWeight="bold">Scan Summary</Typography>
+        </Box>
+
+        {!brief || scanSummary.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">No scanner results yet. Run the scanner or start watch mode.</Typography>
+        ) : (
+          scanSummary.map((s, i) => (
+            <Box key={s.templateId} mb={i < scanSummary.length - 1 ? 0.75 : 0}>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2">{s.templateName}</Typography>
+                <Box display="flex" gap={0.75} alignItems="center">
+                  <Chip
+                    label={`${s.count} match${s.count !== 1 ? 'es' : ''}`}
+                    size="small"
+                    color={s.count > 0 ? 'primary' : 'default'}
+                    sx={{ fontSize: '0.68rem' }}
+                  />
+                </Box>
+              </Box>
+              {s.topSymbols?.length > 0 && (
+                <Typography variant="caption" color="text.secondary">
+                  {s.topSymbols.join(', ')}
+                </Typography>
+              )}
+              {i < scanSummary.length - 1 && <Divider sx={{ mt: 0.75 }} />}
+            </Box>
+          ))
+        )}
+      </CardContent>
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <Button size="small" endIcon={<ArrowForward />} onClick={() => navigate('/scanner')} sx={{ textTransform: 'none', fontSize: '0.78rem' }}>
+          Open Scanner
+        </Button>
+      </Box>
+    </Card>
+  );
+}
+
+// ── Main page ───────────────────────────────────────────────────────────────
+
 export default function IntelligenceHome() {
   const navigate = useNavigate();
-  const [vixData, setVixData] = useState(null);
-  const [briefData, setBriefData] = useState(null);
-  const [briefLoading, setBriefLoading] = useState(true);
-  const [scanSummary, setScanSummary] = useState(null);
+  const [brief, setBrief] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // VIX / market regime
-    apiService.get('/market/vix')
-      .then(r => { if (r.data?.vix) setVixData(r.data); })
-      .catch(() => {});
-
-    // Morning brief — not yet implemented, placeholder
     apiService.get('/morning-brief')
-      .then(r => setBriefData(r.data))
-      .catch(() => setBriefData(null))
-      .finally(() => setBriefLoading(false));
-
-    // Scanner — use watching endpoint for activity summary
-    apiService.get('/scanner/watching')
-      .then(r => setScanSummary(r.data))
-      .catch(() => {});
+      .then(r => setBrief(r.data?.data || null))
+      .catch(() => setBrief(null))
+      .finally(() => setLoading(false));
   }, []);
 
   const now = new Date();
@@ -89,164 +327,66 @@ export default function IntelligenceHome() {
 
   return (
     <Box>
-      {/* Header */}
+      {/* Page header */}
       <Box mb={3}>
         <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-          <WbSunny sx={{ color: 'warning.main', fontSize: '1.2rem' }} />
+          <WbSunny sx={{ color: 'warning.main', fontSize: '1.3rem' }} />
           <Typography variant="h5" fontWeight="bold">Market Intelligence</Typography>
         </Box>
         <Box display="flex" alignItems="center" gap={1}>
           <AccessTime sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-          <Typography variant="caption" color="text.secondary">{dateStr} · {timeStr} IST</Typography>
-          {vixData && (
-            <>
-              <Typography variant="caption" color="text.secondary">·</Typography>
-              <Typography variant="caption" color="text.secondary">India VIX {vixData.vix?.toFixed(1)}</Typography>
-              <RegimeChip vix={vixData.vix} />
-            </>
-          )}
+          <Typography variant="caption" color="text.secondary">
+            {dateStr} · {timeStr} IST
+          </Typography>
         </Box>
       </Box>
 
       <Grid container spacing={2.5}>
 
-        {/* Morning Brief */}
-        <Grid item xs={12} md={6} lg={4}>
-          <MissionCard
-            title="Morning Brief"
-            subtitle="Today's market at a glance"
-            icon={<WbSunny fontSize="small" />}
-            status={briefData ? 'LIVE' : 'COMING SOON'}
-            action="/scanner"
-            actionLabel="Open Scanner"
-          >
-            {briefLoading ? (
-              <>
-                <Skeleton height={24} sx={{ mb: 0.5 }} />
-                <Skeleton height={24} width="80%" sx={{ mb: 0.5 }} />
-                <Skeleton height={24} width="60%" />
-              </>
-            ) : briefData ? (
-              <Box>
-                <Typography variant="body2">{briefData.summary || 'Brief loaded.'}</Typography>
-              </Box>
-            ) : (
-              <Box>
-                <Alert severity="info" sx={{ py: 0.5, mb: 1.5, fontSize: '0.78rem' }}>
-                  Morning Brief (Mission 1) is under construction. It will synthesize VIX, sector strength, top opportunities and watchlist changes into a 60-second daily summary.
-                </Alert>
-                {vixData && (
-                  <Box display="flex" flexDirection="column" gap={0.75}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">India VIX</Typography>
-                      <Box display="flex" gap={1} alignItems="center">
-                        <Typography variant="body2" fontWeight="bold">{vixData.vix?.toFixed(2)}</Typography>
-                        <RegimeChip vix={vixData.vix} />
-                      </Box>
-                    </Box>
-                    <Divider />
-                    <Typography variant="caption" color="text.secondary">
-                      {vixData.vix >= 20
-                        ? 'Elevated volatility — tighter stops, smaller positions.'
-                        : vixData.vix >= 15
-                        ? 'Normal market conditions.'
-                        : 'Low volatility — wider stops may be appropriate.'}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            )}
-          </MissionCard>
+        {/* Row 1: three main cards */}
+        <Grid item xs={12} md={4}>
+          <MorningBriefCard brief={brief} loading={loading} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <OpportunitiesCard brief={brief} loading={loading} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ScanSummaryCard brief={brief} loading={loading} />
         </Grid>
 
-        {/* Top Opportunities */}
-        <Grid item xs={12} md={6} lg={4}>
-          <MissionCard
-            title="Top Opportunities"
-            subtitle="Stocks ranked by multi-factor score"
-            icon={<LightbulbOutlined fontSize="small" />}
-            status="COMING SOON"
-            action="/scanner"
-            actionLabel="Run Scanner now"
-          >
-            <Alert severity="info" sx={{ py: 0.5, mb: 1.5, fontSize: '0.78rem' }}>
-              Opportunity Ranking (Mission 2) will score stocks across Momentum, Volume, Relative Strength, Sector and VIX regime — with every point explainable.
-            </Alert>
-            <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-              Example output:
-            </Typography>
-            {[
-              { symbol: 'XYZ', score: 91, reason: 'Momentum ↑ · Sector outperforming · Volume 1.8×' },
-              { symbol: 'ABC', score: 84, reason: 'RSI recovery · VWAP reclaim · Buyer imbalance' },
-              { symbol: 'DEF', score: 76, reason: 'Trend intact · Volume confirming · Low ATR' },
-            ].map(item => (
-              <Box key={item.symbol} display="flex" justifyContent="space-between" alignItems="flex-start" mb={0.75}
-                sx={{ opacity: 0.5, cursor: 'default' }}>
-                <Box>
-                  <Typography variant="body2" fontWeight="bold" display="inline">{item.symbol}</Typography>
-                  <Typography variant="caption" color="text.secondary" display="block">{item.reason}</Typography>
-                </Box>
-                <Chip label={item.score} size="small" color="primary" sx={{ fontSize: '0.72rem', minWidth: 36 }} />
-              </Box>
-            ))}
-            <Typography variant="caption" color="text.disabled" fontStyle="italic">↑ Illustrative only</Typography>
-          </MissionCard>
-        </Grid>
-
-        {/* What Changed */}
-        <Grid item xs={12} md={6} lg={4}>
-          <MissionCard
-            title="What Changed"
-            subtitle="Portfolio & watchlist updates"
-            icon={<ChangeHistory fontSize="small" />}
-            status="COMING SOON"
-            action="/alerts"
-            actionLabel="Manage Alerts"
-          >
-            <Alert severity="info" sx={{ py: 0.5, mb: 1.5, fontSize: '0.78rem' }}>
-              Change Detection (Mission 4) will notify you when momentum, volume or sector strength shifts meaningfully — without you polling each stock.
-            </Alert>
-            <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-              Example output:
-            </Typography>
-            {[
-              { symbol: 'XYZ', change: 'Momentum ↑  Sector strength ↑', dir: 'up' },
-              { symbol: 'ABC', change: 'Relative strength ↓  Selling vol ↑', dir: 'down' },
-              { symbol: 'DEF', change: 'Technical breakdown  Risk ↑', dir: 'down' },
-            ].map(item => (
-              <Box key={item.symbol} display="flex" alignItems="flex-start" gap={1} mb={0.75} sx={{ opacity: 0.5 }}>
-                {item.dir === 'up'
-                  ? <TrendingUp sx={{ color: 'success.main', mt: 0.2, fontSize: '1rem', flexShrink: 0 }} />
-                  : <TrendingDown sx={{ color: 'error.main', mt: 0.2, fontSize: '1rem', flexShrink: 0 }} />}
-                <Box>
-                  <Typography variant="body2" fontWeight="bold">{item.symbol}</Typography>
-                  <Typography variant="caption" color="text.secondary">{item.change}</Typography>
-                </Box>
-              </Box>
-            ))}
-            <Typography variant="caption" color="text.disabled" fontStyle="italic">↑ Illustrative only</Typography>
-          </MissionCard>
-        </Grid>
-
-        {/* Quick access — existing tools */}
+        {/* What Changed — placeholder until Mission 4 */}
         <Grid item xs={12}>
-          <SectionHeader>Advanced Tools</SectionHeader>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <ChangeHistory sx={{ color: 'primary.main', fontSize: '1.1rem' }} />
+                <Typography variant="subtitle1" fontWeight="bold">What Changed</Typography>
+                <Chip label="COMING SOON" size="small" sx={{ fontSize: '0.65rem', opacity: 0.6 }} />
+              </Box>
+              <Alert severity="info" sx={{ py: 0.5, fontSize: '0.78rem' }}>
+                Change Detection (Mission 4) — will notify you when momentum, volume or sector strength shifts meaningfully in your portfolio or watchlist, without you having to poll each stock.
+              </Alert>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Quick access tiles */}
+        <Grid item xs={12}>
+          <SectionLabel>Advanced Tools</SectionLabel>
           <Grid container spacing={1.5}>
             {[
-              { label: 'Scanner', desc: 'Template-based stock scans', icon: <Search fontSize="small" />, path: '/scanner' },
-              { label: 'Order Radar', desc: 'Real-time buyer/seller imbalance', icon: <RadarIcon fontSize="small" />, path: '/radar' },
-              { label: 'Sector Heatmap', desc: 'Sector performance grid', icon: <GridView fontSize="small" />, path: '/heatmap' },
-              { label: 'Strategies', desc: 'Strategy builder & paper trading', icon: <TrendingUp fontSize="small" />, path: '/strategies' },
-              { label: 'Backtest', desc: 'Strategy simulation (synthetic data)', icon: <TrendingFlat fontSize="small" />, path: '/backtest' },
-              { label: 'Alerts', desc: 'Price & indicator watches', icon: <NotificationsActive fontSize="small" />, path: '/alerts' },
+              { label: 'Scanner',       desc: 'Template-based scans',          icon: <Search fontSize="small" />,             path: '/scanner' },
+              { label: 'Order Radar',   desc: 'Buyer/seller imbalance',        icon: <RadarIcon fontSize="small" />,          path: '/radar' },
+              { label: 'Sector Heatmap',desc: 'Sector performance grid',       icon: <GridView fontSize="small" />,           path: '/heatmap' },
+              { label: 'Strategies',    desc: 'Builder + paper trading',       icon: <TrendingUp fontSize="small" />,         path: '/strategies' },
+              { label: 'Backtest',      desc: 'Strategy simulation',           icon: <TrendingFlat fontSize="small" />,       path: '/backtest' },
+              { label: 'Alerts',        desc: 'Price & indicator watches',     icon: <NotificationsActive fontSize="small" />,path: '/alerts' },
             ].map(item => (
               <Grid item xs={6} sm={4} md={2} key={item.label}>
                 <Paper
                   onClick={() => navigate(item.path)}
-                  sx={{
-                    p: 1.5, cursor: 'pointer', textAlign: 'center',
-                    '&:hover': { bgcolor: 'action.hover' }, transition: 'background 0.15s'
-                  }}
+                  sx={{ p: 1.5, cursor: 'pointer', textAlign: 'center',
+                    '&:hover': { bgcolor: 'action.hover' }, transition: 'background 0.15s' }}
                 >
                   <Box sx={{ color: 'primary.main', mb: 0.5 }}>{item.icon}</Box>
                   <Typography variant="caption" fontWeight="bold" display="block">{item.label}</Typography>
@@ -257,26 +397,26 @@ export default function IntelligenceHome() {
           </Grid>
         </Grid>
 
-        {/* Product journey */}
+        {/* Mission roadmap strip */}
         <Grid item xs={12}>
-          <SectionHeader>Building Towards</SectionHeader>
+          <SectionLabel>Roadmap</SectionLabel>
           <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
             {[
-              { label: 'Morning Brief', done: false, next: true },
-              { label: 'Opportunity Ranking', done: false },
+              { label: '✓ Morning Brief', done: true },
+              { label: 'Opportunity Ranking', done: false, next: true },
               { label: 'Why This Stock', done: false },
               { label: 'What Changed', done: false },
               { label: 'Historical Backtesting', done: false },
               { label: 'Portfolio Intelligence', done: false },
             ].map((m, i) => (
               <React.Fragment key={m.label}>
-                {i > 0 && <Typography color="text.disabled">→</Typography>}
+                {i > 0 && <Typography color="text.disabled" sx={{ fontSize: '0.8rem' }}>→</Typography>}
                 <Chip
                   label={m.label}
                   size="small"
-                  variant={m.next ? 'filled' : 'outlined'}
-                  color={m.next ? 'primary' : 'default'}
-                  sx={{ fontSize: '0.68rem', opacity: m.next ? 1 : 0.5 }}
+                  variant={m.done || m.next ? 'filled' : 'outlined'}
+                  color={m.done ? 'success' : m.next ? 'primary' : 'default'}
+                  sx={{ fontSize: '0.68rem', opacity: m.done || m.next ? 1 : 0.45 }}
                 />
               </React.Fragment>
             ))}
