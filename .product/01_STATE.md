@@ -210,6 +210,26 @@ Completes the product loop: Opportunity → Evidence → Strategy → Paper Trad
 
 ---
 
+### Performance Attribution — P1 (added Nov 2026)
+
+Answers "does Algo-X intelligence actually help?" — the core validation question.
+
+- `attribution.service.js` — computes metrics from profiles trades.json; splits intel-sourced (sourceFlow: 'opportunity') vs manual; groups intel trades into score bands (75+, 60–74, 45–59, <45); metrics: win rate, avg P&L, profit factor, avg R:R, sample-size labels
+- `GET /api/attribution?profile=amol` → `{ intelTrades, manualTrades, scoreBands, dataSource }`
+- Demo mode: `mockService.getAttributionData()` with synthetic data, clearly labelled SYNTHETIC_DEMO
+- Frontend `/attribution` — comparison cards, score-band table, sample-size warnings, key insight
+- Added to Intelligence nav section
+
+### Immutable Entry Snapshot — P1 (added Nov 2026)
+
+Every intelligence-sourced paper trade now stores full entry context.
+
+- `intelligence` block expanded: `opportunityScore`, `scoreFactors`, `matchedStrategy`, `signals`, `sector`, `evidenceSnapshot` (RSI, MACD histogram, volume, smaTrend, vwapPosition), `sourceFlow`
+- Trades persisted to `profiles/amol/trades.json` on creation (survives server restart)
+- 15 existing demo trades retroactively seeded with intelligence metadata across all 4 score bands (scores 38–82)
+
+---
+
 ## Known Limitations / Not Working
 
 - **Backtesting uses synthetic data in demo mode** — real historical candles require a live Kite API key

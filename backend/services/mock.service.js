@@ -625,6 +625,33 @@ class MockService {
       message: `Paper trade opened: ${quantity} × ${(symbol || '').toUpperCase()} @ ₹${parseFloat(entryPrice).toFixed(2)}`,
     };
   }
+
+  getAttributionData() {
+    return {
+      success: true,
+      data: {
+        generatedAt: new Date().toISOString(),
+        dataSource: 'SYNTHETIC_DEMO',
+        totalTrades: 25,
+        intelTrades: {
+          count: 15, winRate: 67, avgPnl: 187.40, totalPnl: 2811.00,
+          profitFactor: 2.1, avgRR: 1.85, openCount: 2,
+          sampleLabel: 'Very low sample — directional only',
+        },
+        manualTrades: {
+          count: 10, winRate: 50, avgPnl: 42.30, totalPnl: 423.00,
+          profitFactor: 1.1, avgRR: 1.2, openCount: 0,
+          sampleLabel: 'Very low sample — directional only',
+        },
+        scoreBands: [
+          { band: '75+',   label: '75–100',   count: 4, winRate: 75, avgPnl: 312.50, profitFactor: 3.2, avgRR: 2.4, sampleLabel: 'Very low sample — directional only' },
+          { band: '60-74', label: '60–74',    count: 6, winRate: 67, avgPnl: 178.20, profitFactor: 2.0, avgRR: 1.9, sampleLabel: 'Very low sample — directional only' },
+          { band: '45-59', label: '45–59',    count: 4, winRate: 50, avgPnl: 55.60,  profitFactor: 1.1, avgRR: 1.3, sampleLabel: 'Very low sample — directional only' },
+          { band: '<45',   label: 'Below 45', count: 1, winRate: 0,  avgPnl: -120.00, profitFactor: null, avgRR: 0.9, sampleLabel: 'Very low sample — directional only' },
+        ],
+      },
+    };
+  }
 }
 
 module.exports = new MockService();

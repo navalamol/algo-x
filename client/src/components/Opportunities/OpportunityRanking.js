@@ -326,6 +326,16 @@ function PaperTradePanel({ opp, evidence, visible }) {
         opportunityScore: opp.totalScore,
         matchedStrategy: matches[0]?.name || null,
         signals: (evidence.signals || []).slice(0, 3).map(s => s.label),
+        scoreFactors: opp.breakdown || null,
+        sector: evidence.sector || null,
+        evidenceSnapshot: evidence.technicals ? {
+          rsi: evidence.technicals.rsi,
+          macdHistogram: evidence.technicals.macd?.histogram,
+          volumeVsAvg: evidence.technicals.volumeVsAvg,
+          smaTrend: evidence.technicals.smaTrend,
+          stochRsi: evidence.technicals.stochRsi,
+          vwapPosition: evidence.technicals.vwapPosition,
+        } : null,
       };
       const res = await apiService.post('/paper-trade/quick', payload);
       setResult({ success: true, message: res.data.data?.message || 'Trade placed!' });

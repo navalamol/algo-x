@@ -202,7 +202,51 @@ This completes the full product loop.
 - USER_GUIDE section 16 added
 - 5 strategy matching rules evaluated client-side: RSI Oversold, VWAP Breakout, Support Bounce, Volume Spike, Mean Reversion
 
-**Validation status:** 🔲 PENDING — start server and run validation steps in USER_GUIDE §16
+**Validation status:** ✅ PERSONALLY VALIDATED (user confirmed M7 end-to-end flow working)
+
+---
+
+## ✅ P1 — Performance Attribution + Immutable Entry Snapshot — IMPLEMENTED
+
+**Objective:** Answer "does Algo-X intelligence actually help?" and preserve decision context permanently.
+
+**What was built:**
+
+### Immutable Entry Snapshot
+- `intelligence` block in paper-trade.controller.js expanded to include: `scoreFactors`, `sector`, `evidenceSnapshot` (RSI, MACD, volume, smaTrend, vwapPosition)
+- Trades now persisted to `profiles/amol/trades.json` on creation — survives server restarts
+- `OpportunityRanking.js` sends full entry context in payload
+- 15 demo trades seeded with intelligence metadata across all 4 score bands
+
+### Performance Attribution Service
+- `backend/services/attribution.service.js` — reads trades.json, splits intel vs manual, computes per-group metrics (win rate, avg P&L, profit factor, avg R:R), groups intel trades into score bands
+- `backend/controllers/attribution.controller.js` + `backend/routes/attribution.routes.js`
+- `GET /api/attribution?profile=amol` → `{ intelTrades, manualTrades, scoreBands, dataSource }`
+- Demo mode: `mockService.getAttributionData()` — synthetic data, clearly labelled SYNTHETIC_DEMO
+- Registered in `server.js`
+
+### Attribution Frontend
+- `client/src/pages/Attribution.js` — summary strip, intel vs manual comparison cards, score-band table, key insight box, sample-size badges, refresh button
+- Route `/attribution` added to App.js
+- "Attribution" added to Intelligence nav section with Analytics icon
+- USER_GUIDE section 17 added
+
+**Validation status:** 🔲 PENDING — start server, go to Intelligence → Attribution in demo mode, verify all 4 score bands show synthetic data
+
+---
+
+## 🔜 P2 — Score → Outcome Analysis + Deeper Journal Analytics
+
+**Objective:** As real trade data accumulates, surface patterns in what works.
+
+**When to build:** After 20+ real intelligence-sourced paper trades exist.
+
+**What to build:**
+- Score → Outcome scatter (intelligence trades only): does higher score correlate with better P&L?
+- Regime performance: group outcomes by VIX band (LOW/NORMAL/HIGH/EXTREME)
+- Strategy outcome breakdown: which strategy + regime combination works best?
+- Holding-period analysis: average duration vs outcome
+- Add `marketRegime` and `vixAtEntry` to entry snapshot when Morning Brief data is available at trade time
 
 ---
 

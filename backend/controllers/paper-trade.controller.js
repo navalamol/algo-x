@@ -1,3 +1,5 @@
+const path = require('path');
+const fs   = require('fs');
 const logger = require('../utils/logger');
 const { isDemoMode, isDemoModeDb } = require('../config/kite.config');
 const memoryStore = require('../services/memory-store.service');
@@ -10,7 +12,7 @@ const paperTradingService = require('../services/paper-trading.service');
  */
 exports.quickTrade = async (req, res) => {
   try {
-    const { symbol, quantity, entryPrice, stopLoss, target, opportunityScore, matchedStrategy, signals } = req.body;
+    const { symbol, quantity, entryPrice, stopLoss, target, opportunityScore, matchedStrategy, signals, scoreFactors, sector, evidenceSnapshot } = req.body;
 
     // Validate required fields
     if (!symbol || !quantity || !entryPrice) {
@@ -27,8 +29,11 @@ exports.quickTrade = async (req, res) => {
 
     const intelligence = {
       opportunityScore: opportunityScore || null,
+      scoreFactors: scoreFactors || null,
       matchedStrategy: matchedStrategy || null,
       signals: signals || [],
+      sector: sector || null,
+      evidenceSnapshot: evidenceSnapshot || null,
       sourceFlow: 'opportunity',
     };
 
@@ -53,6 +58,15 @@ exports.quickTrade = async (req, res) => {
         timestamp: new Date().toISOString(),
       };
       const created = await memoryStore.create('trades', tradeData);
+
+      try {
+        const tradesPath = path.join(__dirname, '../../profiles/amol/trades.json');
+        const existing = JSON.parse(fs.readFileSync(tradesPath, 'utf8'));
+        existing.push({ ...tradeData, _id: created._id });
+        fs.writeFileSync(tradesPath, JSON.stringify(existing, null, 2));
+      } catch (persistErr) {
+        logger.warn('[paper-trade] Could not persist to profile file:', persistErr.message);
+      }
 
       logger.info(`[paper-trade] Quick trade placed (demo): ${qty} ${symbol} @ ₹${price}`);
       return res.status(201).json({
@@ -104,6 +118,15 @@ exports.quickTrade = async (req, res) => {
       timestamp: new Date().toISOString(),
     };
     const created = await memoryStore.create('trades', tradeRecord);
+
+    try {
+      const tradesPath = path.join(__dirname, '../../profiles/amol/trades.json');
+      const existing = JSON.parse(fs.readFileSync(tradesPath, 'utf8'));
+      existing.push({ ...tradeRecord, _id: created._id });
+      fs.writeFileSync(tradesPath, JSON.stringify(existing, null, 2));
+    } catch (persistErr) {
+      logger.warn('[paper-trade] Could not persist to profile file:', persistErr.message);
+    }
 
     logger.info(`[paper-trade] Quick trade placed (live): ${qty} ${symbol} @ ₹${price}`);
     res.status(201).json({

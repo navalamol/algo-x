@@ -9,11 +9,28 @@
     "quantity": 20,
     "entryPrice": 622.50,
     "exitPrice": 638.35,
+    "stopLoss": 603.83,
+    "target": 653.63,
     "status": "COMPLETE",
     "pnl": 316.00,
     "pnlPercentage": 2.54,
     "isPaperTrade": true,
-    "timestamp": "2026-11-02T09:48:00.000Z"
+    "timestamp": "2026-11-02T09:48:00.000Z",
+    "intelligence": {
+      "opportunityScore": 82,
+      "matchedStrategy": "RSI Oversold Reversal",
+      "signals": ["RSI oversold at 28", "Volume 2.1× avg", "Near support"],
+      "sector": "Banking",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 20, "reason": "Price above 20 SMA" },
+        { "factor": "Momentum", "score": 18, "reason": "RSI at 28 — oversold bounce setup" },
+        { "factor": "Volume", "score": 19, "reason": "Volume 2.1× average" },
+        { "factor": "Relative Strength", "score": 16, "reason": "Outperforming NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 28, "macdHistogram": -0.4, "volumeVsAvg": 2.1, "smaTrend": "above_sma20", "vwapPosition": "below" }
+    }
   },
   {
     "_id": "trade_002",
@@ -25,11 +42,28 @@
     "quantity": 5,
     "entryPrice": 1448.20,
     "exitPrice": 1471.70,
+    "stopLoss": 1404.75,
+    "target": 1520.61,
     "status": "COMPLETE",
     "pnl": 117.50,
     "pnlPercentage": 1.62,
     "isPaperTrade": true,
-    "timestamp": "2026-11-03T10:12:00.000Z"
+    "timestamp": "2026-11-03T10:12:00.000Z",
+    "intelligence": {
+      "opportunityScore": 79,
+      "matchedStrategy": "VWAP Breakout",
+      "signals": ["Above VWAP", "Volume 1.8× avg", "Bullish trend"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 22, "reason": "Price above 20 and 50 SMA" },
+        { "factor": "Momentum", "score": 16, "reason": "RSI at 61 — positive momentum" },
+        { "factor": "Volume", "score": 17, "reason": "Volume 1.8× average" },
+        { "factor": "Relative Strength", "score": 15, "reason": "Outperforming NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 61, "macdHistogram": 0.8, "volumeVsAvg": 1.8, "smaTrend": "uptrend", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_003",
@@ -41,11 +75,28 @@
     "quantity": 8,
     "entryPrice": 2440.00,
     "exitPrice": 2419.90,
+    "stopLoss": 2366.80,
+    "target": 2562.00,
     "status": "COMPLETE",
     "pnl": -160.80,
     "pnlPercentage": -0.82,
     "isPaperTrade": true,
-    "timestamp": "2026-11-04T09:35:00.000Z"
+    "timestamp": "2026-11-04T09:35:00.000Z",
+    "intelligence": {
+      "opportunityScore": 76,
+      "matchedStrategy": "Golden Cross Momentum",
+      "signals": ["Golden cross", "Volume 1.5× avg", "Above VWAP"],
+      "sector": "Energy",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 23, "reason": "SMA20 crossed above SMA50" },
+        { "factor": "Momentum", "score": 15, "reason": "RSI at 58 — neutral-bullish" },
+        { "factor": "Volume", "score": 15, "reason": "Volume 1.5× average" },
+        { "factor": "Relative Strength", "score": 14, "reason": "Slight outperformance" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 58, "macdHistogram": 0.3, "volumeVsAvg": 1.5, "smaTrend": "uptrend", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_004",
@@ -57,11 +108,28 @@
     "quantity": 10,
     "entryPrice": 1680.00,
     "exitPrice": 1694.90,
+    "stopLoss": 1629.60,
+    "target": 1764.00,
     "status": "COMPLETE",
     "pnl": 149.00,
     "pnlPercentage": 0.89,
     "isPaperTrade": true,
-    "timestamp": "2026-11-05T10:45:00.000Z"
+    "timestamp": "2026-11-05T10:45:00.000Z",
+    "intelligence": {
+      "opportunityScore": 77,
+      "matchedStrategy": "Support Bounce",
+      "signals": ["Near support", "RSI 42", "Volume 1.6× avg"],
+      "sector": "Banking",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 20, "reason": "Price above 50 SMA" },
+        { "factor": "Momentum", "score": 15, "reason": "RSI at 42 — building from oversold" },
+        { "factor": "Volume", "score": 16, "reason": "Volume 1.6× average" },
+        { "factor": "Relative Strength", "score": 17, "reason": "Banking sector leading" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 42, "macdHistogram": -0.2, "volumeVsAvg": 1.6, "smaTrend": "above_sma50", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_005",
@@ -73,11 +141,28 @@
     "quantity": 3,
     "entryPrice": 3765.00,
     "exitPrice": 3754.30,
+    "stopLoss": 3651.65,
+    "target": 3953.25,
     "status": "COMPLETE",
     "pnl": -32.10,
     "pnlPercentage": -0.28,
     "isPaperTrade": true,
-    "timestamp": "2026-11-06T09:55:00.000Z"
+    "timestamp": "2026-11-06T09:55:00.000Z",
+    "intelligence": {
+      "opportunityScore": 68,
+      "matchedStrategy": "Resistance Breakout",
+      "signals": ["Breaking resistance", "Volume 1.4× avg", "Bullish MACD"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 18, "reason": "Price above 20 SMA, testing resistance" },
+        { "factor": "Momentum", "score": 14, "reason": "RSI at 55 — moderate momentum" },
+        { "factor": "Volume", "score": 14, "reason": "Volume 1.4× average" },
+        { "factor": "Relative Strength", "score": 13, "reason": "In line with NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 55, "macdHistogram": 0.5, "volumeVsAvg": 1.4, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_006",
@@ -89,11 +174,28 @@
     "quantity": 15,
     "entryPrice": 625.10,
     "exitPrice": 640.95,
+    "stopLoss": 606.35,
+    "target": 656.36,
     "status": "COMPLETE",
     "pnl": 237.75,
     "pnlPercentage": 2.54,
     "isPaperTrade": true,
-    "timestamp": "2026-11-09T10:05:00.000Z"
+    "timestamp": "2026-11-09T10:05:00.000Z",
+    "intelligence": {
+      "opportunityScore": 71,
+      "matchedStrategy": "Volume Spike Catcher",
+      "signals": ["Volume 2.3× avg", "RSI 52", "Above VWAP"],
+      "sector": "Banking",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 18, "reason": "Above 20 SMA" },
+        { "factor": "Momentum", "score": 14, "reason": "RSI at 52 — neutral-bullish" },
+        { "factor": "Volume", "score": 20, "reason": "Volume 2.3× average — spike" },
+        { "factor": "Relative Strength", "score": 10, "reason": "In line with NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 52, "macdHistogram": 0.1, "volumeVsAvg": 2.3, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_007",
@@ -105,11 +207,28 @@
     "quantity": 25,
     "entryPrice": 442.00,
     "exitPrice": 449.85,
+    "stopLoss": 428.74,
+    "target": 464.10,
     "status": "COMPLETE",
     "pnl": 196.25,
     "pnlPercentage": 1.78,
     "isPaperTrade": true,
-    "timestamp": "2026-11-10T10:22:00.000Z"
+    "timestamp": "2026-11-10T10:22:00.000Z",
+    "intelligence": {
+      "opportunityScore": 65,
+      "matchedStrategy": "Mean Reversion",
+      "signals": ["RSI 72 — overbought", "Volume 1.3× avg", "Above VWAP"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 17, "reason": "Above 20 SMA" },
+        { "factor": "Momentum", "score": 16, "reason": "RSI at 72 — mean reversion candidate" },
+        { "factor": "Volume", "score": 13, "reason": "Volume 1.3× average" },
+        { "factor": "Relative Strength", "score": 10, "reason": "Slight underperformance" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 72, "macdHistogram": 0.6, "volumeVsAvg": 1.3, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_008",
@@ -121,11 +240,28 @@
     "quantity": 4,
     "entryPrice": 1458.50,
     "exitPrice": 1452.25,
+    "stopLoss": 1414.75,
+    "target": 1531.43,
     "status": "COMPLETE",
     "pnl": -25.00,
     "pnlPercentage": -0.43,
     "isPaperTrade": true,
-    "timestamp": "2026-11-11T09:42:00.000Z"
+    "timestamp": "2026-11-11T09:42:00.000Z",
+    "intelligence": {
+      "opportunityScore": 63,
+      "matchedStrategy": "Intraday Scalper",
+      "signals": ["Above VWAP", "RSI 60", "Volume 1.2× avg"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 18, "reason": "Price above 20 SMA" },
+        { "factor": "Momentum", "score": 13, "reason": "RSI at 60 — moderate" },
+        { "factor": "Volume", "score": 12, "reason": "Volume 1.2× average" },
+        { "factor": "Relative Strength", "score": 11, "reason": "Slight outperformance" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 60, "macdHistogram": 0.2, "volumeVsAvg": 1.2, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_009",
@@ -137,11 +273,28 @@
     "quantity": 10,
     "entryPrice": 1082.00,
     "exitPrice": 1097.85,
+    "stopLoss": 1049.54,
+    "target": 1136.10,
     "status": "COMPLETE",
     "pnl": 158.50,
     "pnlPercentage": 1.46,
     "isPaperTrade": true,
-    "timestamp": "2026-11-12T11:15:00.000Z"
+    "timestamp": "2026-11-12T11:15:00.000Z",
+    "intelligence": {
+      "opportunityScore": 61,
+      "matchedStrategy": "VWAP Breakout",
+      "signals": ["Above VWAP", "Volume 1.6× avg", "RSI 58"],
+      "sector": "Banking",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 16, "reason": "Above 20 SMA" },
+        { "factor": "Momentum", "score": 12, "reason": "RSI at 58 — neutral-bullish" },
+        { "factor": "Volume", "score": 16, "reason": "Volume 1.6× average" },
+        { "factor": "Relative Strength", "score": 8, "reason": "In line with NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 58, "macdHistogram": 0.1, "volumeVsAvg": 1.6, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_010",
@@ -153,11 +306,28 @@
     "quantity": 6,
     "entryPrice": 2448.00,
     "exitPrice": 2465.85,
+    "stopLoss": 2374.56,
+    "target": 2570.40,
     "status": "COMPLETE",
     "pnl": 107.10,
     "pnlPercentage": 0.73,
     "isPaperTrade": true,
-    "timestamp": "2026-11-13T09:58:00.000Z"
+    "timestamp": "2026-11-13T09:58:00.000Z",
+    "intelligence": {
+      "opportunityScore": 57,
+      "matchedStrategy": "Mean Reversion",
+      "signals": ["RSI 68", "Volume 1.1× avg", "Above VWAP"],
+      "sector": "Energy",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 15, "reason": "Above 20 SMA" },
+        { "factor": "Momentum", "score": 13, "reason": "RSI at 68 — approaching overbought" },
+        { "factor": "Volume", "score": 11, "reason": "Volume 1.1× average" },
+        { "factor": "Relative Strength", "score": 9, "reason": "Slight outperformance" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 68, "macdHistogram": 0.4, "volumeVsAvg": 1.1, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_011",
@@ -169,11 +339,28 @@
     "quantity": 2,
     "entryPrice": 3772.00,
     "exitPrice": 3809.50,
+    "stopLoss": 3658.84,
+    "target": 3960.60,
     "status": "COMPLETE",
     "pnl": 75.00,
     "pnlPercentage": 0.99,
     "isPaperTrade": true,
-    "timestamp": "2026-11-16T10:30:00.000Z"
+    "timestamp": "2026-11-16T10:30:00.000Z",
+    "intelligence": {
+      "opportunityScore": 54,
+      "matchedStrategy": "Trend Following",
+      "signals": ["Uptrend", "RSI 56", "Volume 1.0× avg"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 17, "reason": "Above 20 and 50 SMA" },
+        { "factor": "Momentum", "score": 11, "reason": "RSI at 56 — moderate" },
+        { "factor": "Volume", "score": 10, "reason": "Volume at average" },
+        { "factor": "Relative Strength", "score": 7, "reason": "Slight underperformance" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 56, "macdHistogram": 0.2, "volumeVsAvg": 1.0, "smaTrend": "uptrend", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_012",
@@ -185,11 +372,28 @@
     "quantity": 8,
     "entryPrice": 1685.00,
     "exitPrice": 1669.85,
+    "stopLoss": 1634.45,
+    "target": 1769.25,
     "status": "COMPLETE",
     "pnl": -121.20,
     "pnlPercentage": -0.90,
     "isPaperTrade": true,
-    "timestamp": "2026-11-17T09:50:00.000Z"
+    "timestamp": "2026-11-17T09:50:00.000Z",
+    "intelligence": {
+      "opportunityScore": 50,
+      "matchedStrategy": "Golden Cross Momentum",
+      "signals": ["Golden cross", "RSI 50", "Volume 1.0× avg"],
+      "sector": "Banking",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 15, "reason": "SMA20 crossed above SMA50" },
+        { "factor": "Momentum", "score": 10, "reason": "RSI at 50 — neutral" },
+        { "factor": "Volume", "score": 10, "reason": "Volume at average" },
+        { "factor": "Relative Strength", "score": 6, "reason": "Underperforming NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 50, "macdHistogram": 0.1, "volumeVsAvg": 1.0, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_013",
@@ -201,11 +405,28 @@
     "quantity": 20,
     "entryPrice": 618.00,
     "exitPrice": 627.90,
+    "stopLoss": 599.46,
+    "target": 648.90,
     "status": "COMPLETE",
     "pnl": 198.00,
     "pnlPercentage": 1.60,
     "isPaperTrade": true,
-    "timestamp": "2026-11-18T10:08:00.000Z"
+    "timestamp": "2026-11-18T10:08:00.000Z",
+    "intelligence": {
+      "opportunityScore": 48,
+      "matchedStrategy": "VWAP Breakout",
+      "signals": ["Above VWAP", "RSI 53", "Volume 1.1× avg"],
+      "sector": "Banking",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 14, "reason": "Above 20 SMA" },
+        { "factor": "Momentum", "score": 10, "reason": "RSI at 53 — neutral" },
+        { "factor": "Volume", "score": 11, "reason": "Volume 1.1× average" },
+        { "factor": "Relative Strength", "score": 4, "reason": "Underperforming NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 53, "macdHistogram": -0.1, "volumeVsAvg": 1.1, "smaTrend": "above_sma20", "vwapPosition": "above" }
+    }
   },
   {
     "_id": "trade_014",
@@ -217,11 +438,28 @@
     "quantity": 30,
     "entryPrice": 440.00,
     "exitPrice": 447.90,
+    "stopLoss": 426.80,
+    "target": 462.00,
     "status": "COMPLETE",
     "pnl": 237.00,
     "pnlPercentage": 1.80,
     "isPaperTrade": true,
-    "timestamp": "2026-11-19T10:35:00.000Z"
+    "timestamp": "2026-11-19T10:35:00.000Z",
+    "intelligence": {
+      "opportunityScore": 46,
+      "matchedStrategy": "Volume Spike Catcher",
+      "signals": ["Volume 2.0× avg", "RSI 48", "Near VWAP"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 12, "reason": "Above 20 SMA — weakening" },
+        { "factor": "Momentum", "score": 10, "reason": "RSI at 48 — neutral" },
+        { "factor": "Volume", "score": 14, "reason": "Volume 2.0× average" },
+        { "factor": "Relative Strength", "score": 1, "reason": "Underperforming NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 48, "macdHistogram": -0.3, "volumeVsAvg": 2.0, "smaTrend": "above_sma20", "vwapPosition": "below" }
+    }
   },
   {
     "_id": "trade_015",
@@ -233,11 +471,28 @@
     "quantity": 5,
     "entryPrice": 1455.00,
     "exitPrice": 1467.70,
+    "stopLoss": 1411.35,
+    "target": 1527.75,
     "status": "COMPLETE",
     "pnl": 63.50,
     "pnlPercentage": 0.87,
     "isPaperTrade": true,
-    "timestamp": "2026-11-19T11:20:00.000Z"
+    "timestamp": "2026-11-19T11:20:00.000Z",
+    "intelligence": {
+      "opportunityScore": 38,
+      "matchedStrategy": "Resistance Breakout",
+      "signals": ["Volume 1.0× avg", "RSI 44", "Below VWAP"],
+      "sector": "IT",
+      "sourceFlow": "opportunity",
+      "scoreFactors": [
+        { "factor": "Trend", "score": 10, "reason": "Below 20 SMA" },
+        { "factor": "Momentum", "score": 8, "reason": "RSI at 44 — weak momentum" },
+        { "factor": "Volume", "score": 10, "reason": "Volume at average" },
+        { "factor": "Relative Strength", "score": 1, "reason": "Underperforming NIFTY" },
+        { "factor": "VIX Regime", "score": 9, "reason": "Normal VIX — favorable" }
+      ],
+      "evidenceSnapshot": { "rsi": 44, "macdHistogram": -0.5, "volumeVsAvg": 1.0, "smaTrend": "below_sma20", "vwapPosition": "below" }
+    }
   },
   {
     "_id": "trade_016",
@@ -249,6 +504,8 @@
     "quantity": 8,
     "entryPrice": 1085.00,
     "exitPrice": 1077.90,
+    "stopLoss": 1052.45,
+    "target": 1139.25,
     "status": "COMPLETE",
     "pnl": -56.80,
     "pnlPercentage": -0.65,
@@ -265,6 +522,8 @@
     "quantity": 10,
     "entryPrice": 2452.00,
     "exitPrice": 2443.20,
+    "stopLoss": 2378.44,
+    "target": 2574.60,
     "status": "COMPLETE",
     "pnl": -88.00,
     "pnlPercentage": -0.36,
@@ -281,6 +540,8 @@
     "quantity": 10,
     "entryPrice": 1079.00,
     "exitPrice": 1094.60,
+    "stopLoss": 1046.63,
+    "target": 1132.95,
     "status": "COMPLETE",
     "pnl": 156.00,
     "pnlPercentage": 1.44,
@@ -297,6 +558,8 @@
     "quantity": 6,
     "entryPrice": 1682.00,
     "exitPrice": 1696.85,
+    "stopLoss": 1631.54,
+    "target": 1766.10,
     "status": "COMPLETE",
     "pnl": 89.10,
     "pnlPercentage": 0.88,
@@ -313,6 +576,8 @@
     "quantity": 20,
     "entryPrice": 443.50,
     "exitPrice": 439.85,
+    "stopLoss": 430.20,
+    "target": 465.68,
     "status": "COMPLETE",
     "pnl": -73.00,
     "pnlPercentage": -0.82,
@@ -329,6 +594,8 @@
     "quantity": 3,
     "entryPrice": 3758.00,
     "exitPrice": 3795.35,
+    "stopLoss": 3645.26,
+    "target": 3945.90,
     "status": "COMPLETE",
     "pnl": 112.05,
     "pnlPercentage": 0.99,
@@ -345,6 +612,8 @@
     "quantity": 10,
     "entryPrice": 624.00,
     "exitPrice": 619.60,
+    "stopLoss": 605.28,
+    "target": 655.20,
     "status": "COMPLETE",
     "pnl": -44.00,
     "pnlPercentage": -0.71,
@@ -361,6 +630,8 @@
     "quantity": 8,
     "entryPrice": 2444.00,
     "exitPrice": 2467.35,
+    "stopLoss": 2370.68,
+    "target": 2566.20,
     "status": "COMPLETE",
     "pnl": 186.80,
     "pnlPercentage": 0.96,
@@ -377,6 +648,8 @@
     "quantity": 15,
     "entryPrice": 621.00,
     "exitPrice": null,
+    "stopLoss": 602.37,
+    "target": 652.05,
     "status": "OPEN",
     "pnl": 0,
     "pnlPercentage": 0,
@@ -393,6 +666,8 @@
     "quantity": 2,
     "entryPrice": 3752.00,
     "exitPrice": null,
+    "stopLoss": 3639.44,
+    "target": 3939.60,
     "status": "OPEN",
     "pnl": 0,
     "pnlPercentage": 0,

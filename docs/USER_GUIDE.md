@@ -904,3 +904,35 @@ Response: {
 }
 ```
 
+
+## 17. Performance Attribution
+
+**What it does:** Answers "does Algo-X intelligence actually help?" by comparing trades sourced from the intelligence flow (Opportunity → Evidence → Paper Trade) against manually placed trades.
+
+**Where:** Intelligence → Attribution (`/attribution`)
+
+**Key metrics:**
+- **Win Rate** — % of completed trades that were profitable
+- **Avg P&L** — mean profit/loss per trade
+- **Profit Factor** — sum of winners / sum of losers (>1 = profitable overall)
+- **Avg R:R** — average risk-reward ratio from stored SL/target
+
+**Score Bands:** Intelligence trades are grouped by the Opportunity Score at entry:
+- 75–100, 60–74, 45–59, Below 45
+- The question being tested: "Do higher-scored opportunities lead to better outcomes?"
+
+**Sample-size warnings:** The page shows an evidence quality label on every group:
+- Very low sample (<10): Directional only — don't draw conclusions
+- Early evidence (10–19): Interesting patterns emerging
+- Useful (20–49): Directional evidence worth noting
+- Meaningful (50+): Strong personal evidence
+
+**Demo mode:** Shows synthetic data clearly labelled SYNTHETIC DEMO. Use this to understand the UI before real trade data accumulates.
+
+**How to test in demo mode:**
+1. Enable Demo Mode (chip in AppBar)
+2. Go to Intelligence → Attribution
+3. You'll see pre-seeded synthetic data showing all score bands populated
+4. The comparison section shows Intel Trades outperforming Manual Trades (illustrative)
+
+**Important:** With fewer than 20 trades per group, treat all numbers as directional only. The goal is to accumulate 50+ intelligence-sourced paper trades over 30 market sessions before drawing conclusions.
