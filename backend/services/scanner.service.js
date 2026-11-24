@@ -209,7 +209,9 @@ class ScannerService {
         buyerRatio: indicatorsService.calculateBuyerSellerRatio(quote.depth),
         volumeAvg: history.length > 5
           ? history.slice(-6, -1).reduce((s, h) => s + h.volume, 0) / 5
-          : quote.volume || 1
+          : quote.volume || 1,
+        stochrsi: prices.length >= 29 ? indicatorsService.calculateStochasticRSI(prices) : null,
+        macd: prices.length >= 35 ? indicatorsService.calculateMACD(prices) : null
       };
 
       const stockData = {
@@ -271,6 +273,10 @@ class ScannerService {
         return indicators.volumeAvg > 0 ? stockData.volume / indicators.volumeAvg : null;
       case 'priceVsVwap':
         return indicators.vwap > 0 ? stockData.price / indicators.vwap : null;
+      case 'stochrsi':
+        return indicators.stochrsi?.value ?? null;
+      case 'macd_histogram':
+        return indicators.macd?.histogram ?? null;
       default: return null;
     }
   }

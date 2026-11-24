@@ -17,4 +17,16 @@ router.delete('/watchlist/:watchlistId/:instrumentToken', marketController.remov
 router.post('/stocks/filter', marketController.getFilteredStocks);
 router.get('/stocks/:instrumentToken', marketController.getStockDetails);
 
+// VIX
+router.get('/vix', (req, res) => {
+  const vixService = require('../services/vix.service');
+  const mc = vixService.getMarketCondition();
+  res.json({
+    vix: vixService.getCurrentVIX(),
+    condition: mc.condition,
+    description: mc.description,
+    lastUpdate: vixService.lastUpdate
+  });
+});
+
 module.exports = router;

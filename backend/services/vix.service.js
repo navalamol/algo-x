@@ -5,7 +5,8 @@ const axios = require('axios');
 const logger = require('../utils/logger');
 
 class VIXService {
-  constructor() {
+  constructor(io) {
+    this.io = io || null;
     this.currentVIX = 15; // Default VIX value
     this.vixHistory = [];
     this.lastUpdate = null;
@@ -61,6 +62,13 @@ class VIXService {
         }
 
         logger.info(`India VIX updated: ${vix.toFixed(2)}`);
+        if (this.io) {
+          this.io.emit('vix_update', {
+            vix: this.currentVIX,
+            condition: this.getMarketCondition().condition,
+            lastUpdate: this.lastUpdate
+          });
+        }
         return vix;
       }
     } catch (error) {

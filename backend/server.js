@@ -102,6 +102,7 @@ const strategyService = new StrategyService(io);
 const radarService = new RadarService(io);
 const scannerService = new ScannerService(io);
 const alertService = new AlertService(io);
+vixService.io = io; // wire socket after io is ready
 
 // Make services available to routes
 app.locals.tickerService = tickerService;

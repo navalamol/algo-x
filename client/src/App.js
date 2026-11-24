@@ -14,7 +14,9 @@ import {
   ListItemButton,
   CssBaseline,
   ThemeProvider,
-  createTheme
+  createTheme,
+  Chip,
+  Tooltip
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -61,28 +63,23 @@ const theme = createTheme({
 
 function App() {
   const [tickerStatus, setTickerStatus] = useState('disconnected');
+  const [vixData, setVixData] = useState(null); // { vix, condition }
 
   useEffect(() => {
     // Connect to socket
     socketService.connect();
 
-    // Listen for ticker connection status
-    socketService.on('ticker:connected', () => {
-      setTickerStatus('connected');
-    });
+    socketService.on('ticker:connected', () => setTickerStatus('connected'));
+    socketService.on('ticker:disconnected', () => setTickerStatus('disconnected'));
+    socketService.on('ticker:error', () => setTickerStatus('error'));
+    socketService.on('vix_update', (data) => setVixData(data));
 
-    socketService.on('ticker:disconnected', () => {
-      setTickerStatus('disconnected');
-    });
+    // Load initial VIX on mount
+    fetch('/api/market/vix').then(r => r.json()).then(d => {
+      if (d.vix) setVixData({ vix: d.vix, condition: d.condition });
+    }).catch(() => {});
 
-    socketService.on('ticker:error', (data) => {
-      console.error('Ticker error:', data);
-      setTickerStatus('error');
-    });
-
-    return () => {
-      socketService.disconnect();
-    };
+    return () => { socketService.disconnect(); };
   }, []);
 
   const menuItems = [
@@ -107,24 +104,40 @@ function App() {
               <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                 Kite Algo Trading Platform
               </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    backgroundColor: tickerStatus === 'connected' ? 'success.main' : 'error.main'
-                  }}
-                />
-                <Typography variant="body2">
-                  {tickerStatus === 'connected' ? 'Live' : 'Disconnected'}
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {vixData && (
+                  <Tooltip title={`India VIX — ${vixData.condition || 'NORMAL'}`}>
+                    <Chip
+                      label={`VIX ${vixData.vix?.toFixed(1) ?? '—'}`}
+                      size="small"
+                      sx={{
+                        bgcolor: vixData.vix >= 25
+                          ? 'error.dark'
+                          : vixData.vix >= 20
+                          ? 'warning.dark'
+                          : vixData.vix >= 15
+                          ? '#1565c0'
+                          : 'success.dark',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem'
+                      }}
+                    />
+                  </Tooltip>
+                )}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: tickerStatus === 'connected' ? 'success.main' : 'error.main'
+                    }}
+                  />
+                  <Typography variant="body2">
+                    {tickerStatus === 'connected' ? 'Live' : 'Disconnected'}
+                  </Typography>
+                </Box>
               </Box>
             </Toolbar>
           </AppBar>

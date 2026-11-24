@@ -43,5 +43,24 @@ module.exports = [
       { indicator: 'rsi', operator: '>', value: 70 },
       { indicator: 'buyerRatio', operator: '<', value: 0.7 }
     ]
+  },
+  {
+    id: 'stochrsi_oversold',
+    name: 'StochRSI Oversold',
+    description: 'StochRSI deeply oversold with buyers building — early reversal setup',
+    conditions: [
+      { indicator: 'stochrsi', operator: '<', value: 20 },
+      { indicator: 'rsi', operator: '<', value: 45 },
+      { indicator: 'buyerRatio', operator: '>', value: 1.0 }
+    ]
+  },
+  {
+    id: 'macd_bullish_cross',
+    name: 'MACD Bullish Cross',
+    description: 'MACD histogram just turned positive — momentum shifting upward',
+    conditions: [
+      { indicator: 'macd_histogram', operator: '>', value: 0 },
+      { indicator: 'volumeVsAvg', operator: '>', value: 1.2 }
+    ]
   }
 ];
